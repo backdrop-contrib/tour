@@ -1,39 +1,33 @@
-tour
+Tour
 =======
-
-The tour Library has been abandoned and is no longer maintained.
-====================================================================
 
 Description
 -----------
 
-This module provides Backdrop integration with [tour by Linkedin](http://linkedin.github.io/tour/).
-
-tour is a framework to make it easy for developers to add product tours to 
+Tour is a framework to make it easy for developers to add product tours to 
 their pages. tour accepts a tour JSON object as input and provides an API 
 for the developer to control rendering the tour display and managing the tour 
 progress.
 
+Tour module uses the Shepherd library. Shepherd is a JavaScript library for
+guiding users through your app. It uses Popper.js, another open source library,
+to render dialogs for each tour "step".
+
+See more info at https://shepherdjs.dev/
 
 Backdrop Installation
 ---------------------
 
 1. Download the current, stable version from https://github.com/backdrop-contrib/tour
-2. Download the current of tour at https://github.com/linkedin/tour 
-  and extract the contents. It should contain a `dist` folder.
-3. Create a 'tour' folder in ./libraries and copy the contents of the 
-  `dist` folder into your `tour` folder. The `tour.min.js` file 
-  should therefore be found in ./libraries/tour/js/tour.min.js`.
-4. Enable the tour module and Libraries module
-5. Enable the tour UI module to view the demos and edit/add/delete tours 
+2. Optionally enable the tour UI module to view the demos and edit/add/delete tours 
 if needed
 6. Check that module is working by viewing the demo pages here: admin/config/user-interface/tour/demo.
 
 Usage
 -----
 
-A full description of tour Tour features can be found at: 
-http://linkedin.github.io/tour/
+A full description of Shepherd features can be found at https://shepherdjs.dev/
+
 The tour module reads tours stored as Backdrop config files and loads the 
 necessary JQuery and CSS needed to provide guided tours. See the included config
 for an example to the storage format.
@@ -43,29 +37,27 @@ named in the format `tour.<module>.<any_id>`.
 
 - Tours with `auto_start = 1` set will start on navigating to the tour path.
 - Otherwise tours can be launched by providing a link created in the format
-`<?php print theme('tour_start_link', array('tour_name' => 'manual_trigger')); ?>`
+`<?php print theme('tour_start_link', array('tour_name' => $tour['name'], 'link_title' => $tour['title'])); ?>`
 
 Tour config files may have the following settings:
 - title: A human readable title.
 - description: A description of the tour.
-- path: The path at which the tour is active.
+- paths The paths at which the tour is active.
 - module: The module providing the tour.
-- machine_name: A unique machine name.
+- name: A unique machine name.
 - editable: (values 0 or 1) Whether the tour is editable in Tour UI.
 - auto_start: (values 0 or 1) Whether the tour will start automatically on 
 navigating to the 
   tour path.
 - play_once: (values 0 or 1) For auto_start tours, whether the tour plays once,
   or every time you navigate to the path.
-- exported: (values 0 or 1) Whether this is a tour provided by tour module or
-  by another contrib module.
-- content: (An array of tour steps)
+- steps: (An array of tour steps)
 
 Tour content(steps) may have the following values:
-- optional: An array of options as found in http://linkedin.github.io/tour/#all-step-options
-- target: The CSS ID target for the step.
+- id: The unique ID for the step.
+- tour_stop_css: The CSS ID target for the step.
 - title: The header for the popup tip.
-- content: The body of the popup tip. 
+- text: The body of the popup tip. 
 - placement: where the bubble should appear in relation to the target.
 - weight: The weight of the tip. (Determines the step order.)
 
@@ -105,4 +97,5 @@ CREDITS
 This module was based on [Joyride JQuery for Drupal Site Tours](https://www.drupal.org/project/joyride) created for Drupal by Mark Koester 
 ("Drupal user markwk":http://drupal.org/user/1094790/) 
 at "Int3c.com":http://int3c.com and 
-sponsored by "MicroEntrepreneur.me":http://microentrepreneur.me 
+sponsored by "MicroEntrepreneur.me":http://microentrepreneur.me and the 
+Drupal 8 core Tour module.
