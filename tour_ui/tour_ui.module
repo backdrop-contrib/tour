@@ -77,6 +77,7 @@ function tour_ui_menu() {
 function tour_ui_list_tour_tours() {
   $items = tour_load_all();
   $rows = array();
+  dpm($items);
   foreach ($items as $name => $item) {
     // Set variable for enabled state.
     $state = $item['enabled'] ? 'Enabled' : 'Disabled';
@@ -137,7 +138,7 @@ function tour_ui_disable_tour_submit($form, &$form_state) {
 
   $set_enabled_status = $tour['enabled'] ? 0 : 1;
   $config = config($tour['config_name']);
-  $config->set('tour.enabled', $set_enabled_status);
+  $config->set('enabled', $set_enabled_status);
   $config->save();
 
 	backdrop_set_message('Tour ' . $tour['title'] . ' settings saved.');
@@ -165,9 +166,9 @@ function tour_ui_edit_tour($form, &$form_state, $name) {
       '#type' => 'value',
       '#value' => $tour['config_name'],
     );
-    $form['machine_name'] = array(
+    $form['name'] = array(
       '#type' => 'value',
-      '#value' => $tour['machine_name'],
+      '#value' => $tour['name'],
     );
     $form['editable'] = array(
       '#type' => 'value',
@@ -180,12 +181,12 @@ function tour_ui_edit_tour($form, &$form_state, $name) {
       '#title' => t('Title'),
       '#default_value' => isset($tour['title']) ? $tour['title'] : '',
     );
-    $form['machine_name'] = array(
-      '#type' => 'machine_name',
+    $form['name'] = array(
+      '#type' => 'name',
       '#default_value' => '',
       '#maxlength' => 21,
-      '#machine_name' => array(
-        'exists' => 'tour_machine_name_exists',
+      '#name' => array(
+        'exists' => 'tour_name_exists',
         'source' => array('title'), 
       ),
     );
@@ -315,7 +316,7 @@ function tour_ui_edit_tour($form, &$form_state, $name) {
  * @return
  *   Whether or not the field machine name is taken.
  */
-function tour_machine_name_exists($value) {
+function tour_name_exists($value) {
   $tours = tour_load_all();
   return isset($tours[$value]);
 }
@@ -448,7 +449,7 @@ function tour_ui_edit_tour_submit($form, &$form_state) {
   
   // This is a new tour being added.
   if($name == 'add') {
-    $config = config('tour.tour.' . $form_state['values']['machine_name']);
+    $config = config('tour.tour.' . $form_state['values']['name']);
   }
   else {
     $config = config($form_state['values']['config_name']);
@@ -485,8 +486,8 @@ function theme_tour_ui_edit_tour($variables) {
   $rows = array();
   $output = '';
   $output .= backdrop_render($form['title']);
-  if(isset($form['machine_name'])) {
-    $output .= backdrop_render($form['machine_name']);
+  if(isset($form['name'])) {
+    $output .= backdrop_render($form['name']);
   }
   $output .= backdrop_render($form['paths']);
   $output .= backdrop_render($form['description']);

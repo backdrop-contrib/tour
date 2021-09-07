@@ -3,7 +3,7 @@
     "tour": {
         "title": "Auto start demo",
         "config_name": "tour.tour.auto_start",
-        "machine_name": "auto_start",
+        "name": "auto_start",
         "editable": 1,
         "paths": [
             "admin/config/user-interface/tour/demo"

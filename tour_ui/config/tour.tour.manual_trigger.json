@@ -3,7 +3,7 @@
     "tour": {
         "title": "Manual trigger demo",
         "config_name": "tour.tour.manual_trigger",
-        "machine_name": "manual_trigger",
+        "name": "manual_trigger",
         "editable": 1,
         "paths": [
             "admin/config/user-interface/tour/demo/manual-trigger"
