@@ -1,0 +1,44 @@
+<?php
+
+/**
+ * Implements hook_requirements().
+ * Check installation requirements and do status reporting.
+ *
+ */
+function tour_requirements($phase) {
+  // $requirements = array();
+  // $t = get_t();
+
+  // module_load_include('module', 'libraries');
+  // $library = $library = libraries_detect('tour');
+  // $library_installed = $library && !empty($library['installed']);
+
+  // $js_name = 'js/tour.min.js';
+  // $base_path = './libraries/tour';
+
+  // switch ($phase) {
+    // case 'runtime':
+    // $requirements['tour'] = array(
+      // 'title' => $t('tour plugin'),
+      // 'value' => $t('Not installed'),
+      // 'severity' => REQUIREMENT_ERROR,
+      // 'description' => $t('Please download !url  plugin and extract it to @path, so @js can be found at @full_path. Also please purge version info from tour file names (both .js and .css)', array(
+        // '!url' => l(t('tour'), 'https://github.com/linkedin/tour'),
+        // '@path' => $base_path,
+        // '@js' => $js_name,
+        // '@full_path' => $base_path . '/' . $js_name,
+      // )
+    // )
+    // );
+    // if ($library_installed) {
+      // $requirements['tour'] = array(
+        // 'title' => $t('tour plugin'),
+        // 'value' => $t('Installed'),
+        // 'severity' => REQUIREMENT_OK,
+      // );
+    // }
+    // break;
+  // }
+
+  return $requirements;
+}
