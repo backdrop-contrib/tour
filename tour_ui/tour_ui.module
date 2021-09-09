@@ -43,6 +43,20 @@ function tour_ui_menu() {
     'access arguments' => array('access administration pages'),
     'type' => MENU_LOCAL_ACTION,
   );
+  $items['admin/config/user-interface/tour/ui/%/step/%'] = array(
+    'title' => 'Edit step',
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => array('tour_ui_edit_step', 5, 7),
+    'access arguments' => array('access administration pages'),
+    'type' => MENU_LOCAL_ACTION,
+  );
+  $items['admin/config/user-interface/tour/ui/%/step/add'] = array(
+    'title' => 'Edit step',
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => array('tour_ui_edit_step', 5, 7),
+    'access arguments' => array('access administration pages'),
+    'type' => MENU_LOCAL_ACTION,
+  );
   
   $items['admin/config/user-interface/tour/demo'] = array(
     'title' => 'tour Demo (Start tour automatically)',
@@ -151,10 +165,14 @@ function tour_ui_disable_tour_submit($form, &$form_state) {
  *
  */
 function tour_ui_edit_tour($form, &$form_state, $name) {
+  backdrop_add_css(backdrop_get_path('module', 'tour_ui') . '/css/tour.admin.css');
+
   $form['#tree'] = TRUE;
+  $form['#attributes']['id'] = 'tour-edit-table';
   
   $tour = array();
   if($name && $tour = tour_load($name)) {
+    $form_state['tour'] = $tour;
     backdrop_set_title($tour['title']);
 
     $form['title'] = array(
@@ -234,9 +252,8 @@ function tour_ui_edit_tour($form, &$form_state, $name) {
     '#default_value' => isset($tour['enabled']) ? $tour['enabled'] : 1,
   );
   $form['content'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('People coming to the picnic'),
-    // Set up the wrapper so that AJAX will be able to replace the fieldset.
+    '#type' => 'container',
+    '#attributes' => array('id' => array('tour-content')),
     '#prefix' => '<div id="steps-fieldset-wrapper">',
     '#suffix' => '</div>',
   );
@@ -245,63 +262,34 @@ function tour_ui_edit_tour($form, &$form_state, $name) {
       $form_state['content'][0] = tour_ui_get_default_step();
     }
     else {
-      $form_state['content'] = $tour['content'];
+      $form_state['content'] = $tour['steps'];
     }
   }
-  
-  foreach ($form_state['content'] as $i => $step) {
-    $form['content'][$i]['title'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Tip title'),
-      '#default_value' => isset($step['title']) ? $step['title'] : '',
-    );
-    $form['content'][$i]['content'] = array(
-      '#type' => 'textarea',
-      '#title' => t('Tip content'),
-      '#rows' => 2,
-      '#default_value' => isset($step['content']) ? $step['content'] : '',
-    );
-    $form['content'][$i]['target'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Target'),
-      '#default_value' => isset($step['target']) ? $step['target'] : '',
-    );
-    $form['content'][$i]['placement'] = array(
-      '#type' => 'select',
-      '#title' => t('Placement'),
-      '#options' => backdrop_map_assoc(array('top', 'bottom', 'right', 'left')),
-      '#default_value' => isset($step['placement']) ? $step['placement'] : '',
-    );
-    $form['content'][$i]['optional'] = array(
-      '#type' => 'textarea',
-      '#title' => t('Optional fields'),
-      '#rows' => 4,
-      '#default_value' => isset($step['optional']) && !empty($step['optional']) ? _rebuild_step_options($step['optional']) : '',
-      '#description' => t('Enter one key:value per line, for example "xOffset: 15" (without the quotes)'),
-    );
-    $form['content'][$i]['weight'] = array(
-      '#type' => 'weight',
-      '#title' => t('Weight'),
-      '#default_value' => isset($step['weight']) ? $step['weight'] : 10,
-      '#delta' => 10,
-      '#title_display' => 'invisible',
-    );
-    $form['content'][$i]['delete'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Delete'),
-      '#default_value' => 0,
-    );
-  }
-  $form['content']['add_more'] = array(
-    '#type' => 'submit',
-    '#value' => t('Add one more'),
-    '#submit' => array('tour_ui_add_one'),
-    '#limit_validation_errors' => array(), 
-    // '#ajax' => array(
-      // 'callback' => 'tour_ui_add_more_callback',
-      // 'wrapper' => 'steps-fieldset-wrapper',
-    // ),
+  $form['content']['tour_table'] = array(
+    '#markup' => tour_ui_edit_tour_table($form, $form_state),
   );
+  
+  $form['#attached'] = array(
+    'library' => array(
+      array('system', 'backdrop.ajax'),
+    ),
+  );
+  //$form['#attached']['backdrop_add_tabledrag'][] = array('field-overview', 'order', 'sibling', 'field-weight');
+  $form['add_more'] = array(
+      '#type' => 'item',
+      '#markup' => l(
+        t('Add a step'),
+        'admin/config/user-interface/tour/ui/'. $form_state['tour']['name'] . '/step/add',
+        array(
+          'attributes' => array(
+            'class' => array('use-ajax block-item'),
+            'data-dialog' => TRUE,
+            'data-dialog-options' => json_encode(array('dialogClass' => 'tour-dialog')),
+          )
+        )
+      ),
+    );
+
   $form['actions'] = array('#type' => 'actions');
   $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save Changes'));
   return $form;
@@ -326,9 +314,23 @@ function tour_name_exists($value) {
  *
  * Selects and returns the fieldset with the names in it.
  */
-function tour_ui_add_more_callback($form, $form_state) {
-  // Doesnt work
+function tour_ui_add_more_ajax($form, $form_state) {
   return $form['content'];
+  $commands = array();
+  $commands[] = ajax_command_html('#steps-fieldset-wrapper', backdrop_render($form['content']));
+  return array(
+    '#type' => 'ajax',
+    '#commands' => $commands,
+  );
+}
+
+/**
+ * Submit handler for the "add-one-more" button.
+ *
+ * Increments the max counter and causes a rebuild.
+ */
+function tour_ui_add_one($form, &$form_state) {
+  $form_state['redirect'] = 'admin/config/user-interface/tour/ui/'. $form_state['tour']['name'] . '/step/add';
 }
 
 /**
@@ -345,14 +347,193 @@ function _rebuild_step_options($optionals) {
 }
 
 /**
- * Submit handler for the "add-one-more" button.
+ * Returns HTML for the tour edit form.
  *
- * Increments the max counter and causes a rebuild.
+ * @param $variables
+ *   An associative array containing:
+ *   - form: A render element representing the form.
+ *
+ * @ingroup themeable
  */
-function tour_ui_add_one($form, &$form_state) {
-  $max_weight = tour_ui_max_weight($form_state['content']);
-  $form_state['content'][] = tour_ui_get_default_step($max_weight);
-  $form_state['rebuild'] = TRUE;
+function tour_ui_edit_tour_table($form, &$form_state) {
+  $tour = $form_state['tour'];
+  $form = array();
+  foreach ($form_state['content'] as $i => $step) {
+    
+    $form['content'][$i]['title'] = array(
+      '#markup' => $step['title'],
+    );
+    $form['content'][$i]['weight'] = array(
+      '#type' => 'weight',
+      '#title' => t('Weight'),
+      '#default_value' => isset($step['weight']) ? $step['weight'] : 10,
+      '#delta' => 10,
+      '#title_display' => 'invisible',
+    );
+    $form['content'][$i]['operations'] = array(
+      '#type' => 'dropbutton',
+      '#links' => array(
+        'configure' => array(
+          'title' => t('Edit'),
+          'href' => 'admin/config/user-interface/tour/ui/' . $tour['name'] . '/step/' . $step['id'],
+          'attributes' => array(
+            'class' => array('use-ajax'),
+            'data-dialog' => TRUE,
+            'data-dialog-options' => json_encode(array('dialogClass' => 'tour-dialog')),
+          ),
+        ),
+        'delete' => array(
+          'title' => t('Delete'),
+          'href' => 'admin/config/user-interface/tour/ui/' . $tour['name'] . '/step/' . $step['id'],
+        ),
+      ),
+    );
+  }
+
+  $rows = array();
+  $output = '';
+  
+  foreach (element_children($form['content']) as $id) {
+
+    $form['content'][$id]['weight']['#attributes']['class'] = array('tour-ui-weight');
+    $rows[] = array(
+      'data' => array(
+        backdrop_render($form['content'][$id]['title']),
+        backdrop_render($form['content'][$id]['operations']),
+      ),
+      'class' => array('draggable'),
+    );
+  }
+
+  $header = array(t('Steps'), t('Configure'));
+
+  $table_id = 'tour-content';
+
+  $output .= theme('table', array(
+    'header' => $header,
+    'rows' => $rows,
+    'attributes' => array('id' => $table_id),
+  ));
+
+  $output .= backdrop_render_children($form);
+
+  backdrop_add_tabledrag($table_id, 'order', 'sibling', 'tour-ui-weight');
+
+  return $output;
+}
+
+
+/**
+ * Returns HTML for the tour edit form.
+ *
+ * @param $variables
+ *   An associative array containing:
+ *   - form: A render element representing the form.
+ *
+ * @ingroup themeable
+ */
+function tour_ui_edit_step($form, &$form_state, $tour, $step_name) {
+  $tour = tour_load($name);
+  foreach ($tour['steps'] as $step) {
+    if ($step['id'] == $step_name) {
+      $tip = $step;
+      break;
+    }
+  }
+  $form['title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Tip title'),
+    '#default_value' => isset($step['title']) ? $step['title'] : '',
+  );
+  $form['content'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Tip content'),
+    '#rows' => 2,
+    '#default_value' => isset($step['content']) ? $step['content'] : '',
+  );
+  $form['target'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Target'),
+    '#default_value' => isset($step['target']) ? $step['target'] : '',
+  );
+  $form['placement'] = array(
+    '#type' => 'select',
+    '#title' => t('Placement'),
+    '#options' => backdrop_map_assoc(array('top', 'bottom', 'right', 'left')),
+    '#default_value' => isset($step['placement']) ? $step['placement'] : '',
+  );
+  $form['optional'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Optional fields'),
+    '#rows' => 4,
+    '#default_value' => isset($step['optional']) && !empty($step['optional']) ? _rebuild_step_options($step['optional']) : '',
+    '#description' => t('Enter one key:value per line, for example "xOffset: 15" (without the quotes)'),
+  );
+
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save Changes')
+  );
+  $form['actions']['cancel'] = array(
+    '#type' => 'submit',
+    '#value' => t('Cancel'),
+    '#limit_validation_errors' => array(),
+    '#submit' => array(),
+    '#ajax' => array(
+      'callback' => 'tour_ui_ajax_cancel_dialog',
+    ),
+  );
+
+  return $form;
+}
+/**
+ * AJAX handler that cancels the edit dialog.
+ */
+function tour_ui_ajax_cancel_dialog($form, $form_state) {
+  $commands = array();
+  $commands[] = ajax_command_close_modal_dialog();
+
+  return array(
+    '#type' => 'ajax',
+    '#commands' => $commands,
+  );
+}
+
+
+/**
+ * Returns HTML for a single step in the tour edit form.
+ *
+ * @param $variables
+ *   An associative array containing:
+ *   - form: A render element representing the form.
+ *
+ * @ingroup themeable
+ */
+function theme_tour_content_row($content) {
+    // $row['title'] = backdrop_render($content['title']);
+    // $row['content'] = backdrop_render($content['content']);
+    // $row['target'] = backdrop_render($content['target']);
+    // $row['placement'] = backdrop_render($content['placement']);
+    // $rows = array($row);
+
+    // if (!empty($rows)) {
+    // $header = array();
+    // $output = theme('table', array('header' => $header, 'rows' => $rows));
+    
+    // $attributes = backdrop_render($content['optional']);
+    
+    // backdrop_add_js(backdrop_get_path('module', 'tour_ui') . '/tour_ui.js');
+    // $toggle = ' <a class="requirements-toggle" href="#">' . t('more') . '</a>';
+    // $details = '<div class="text table-filter-text-source"> ' . $toggle . '</div>' . '<div class="requirements">' . $attributes . '</div>';
+
+    // $output .= $details;
+    // return $output;
+  // }
+  // else {
+    //return t('There are no items in the queue.');
+  //}
+  return backdrop_render($content['title']);
 }
 
 function tour_ui_max_weight($content) {
@@ -364,7 +545,7 @@ function tour_ui_max_weight($content) {
 }
 function tour_ui_get_default_step($max_weight = 0) {
   return array (
-    'title' => '',
+    'title' => t('Stop') . '#: ' . ($max_weight + 2),
     'content' => '',
     'target' => '',
     'placement' => '',
@@ -378,7 +559,7 @@ function tour_ui_get_default_step($max_weight = 0) {
  *
  * @see tour_ui_edit_tour_submit().
  */
-function tour_ui_edit_tour_validate($form, &$form_state) {
+/* function tour_ui_edit_tour_validate($form, &$form_state) {
   form_state_values_clean($form_state);
   
   unset($form_state['values']['actions']);
@@ -433,7 +614,7 @@ function tour_ui_edit_tour_validate($form, &$form_state) {
     unset($form_state['values']['content'][$key]['delete']);
   }
 } 
-
+ */
 /**
  * Form submission handler for tour_ui_edit_tour().
  *
@@ -471,99 +652,6 @@ function tour_ui_format_lines($text) {
   $text = array_filter($text, 'strlen');
   return $text;
 }
-
-/**
- * Returns HTML for the tour edit form.
- *
- * @param $variables
- *   An associative array containing:
- *   - form: A render element representing the form.
- *
- * @ingroup themeable
- */
-function theme_tour_ui_edit_tour($variables) {
-  $form = $variables['form'];
-  $rows = array();
-  $output = '';
-  $output .= backdrop_render($form['title']);
-  if(isset($form['name'])) {
-    $output .= backdrop_render($form['name']);
-  }
-  $output .= backdrop_render($form['paths']);
-  $output .= backdrop_render($form['description']);
-  $output .= backdrop_render($form['enabled']);
-  $output .= backdrop_render($form['editable']);
-  $output .= backdrop_render($form['auto_start']);
-  $output .= backdrop_render($form['play_once']);
-  
-  $add_more = $form['content']['add_more'];
-  unset($form['content']['add_more']);
-  
-  foreach (element_children($form['content']) as $id) {
-
-    $form['content'][$id]['weight']['#attributes']['class'] = array('tour-ui-weight');
-    $rows[] = array(
-      'data' => array(
-        theme('tour_content_row', $form['content'][$id]),
-        backdrop_render($form['content'][$id]['delete']),
-        backdrop_render($form['content'][$id]['weight']),
-      ),
-      'class' => array('draggable'),
-    );
-  }
-  unset($form['content']);
-
-  $header = array(t('Steps'), t('Delete'), t('Weight'));
-
-  $table_id = 'tour-content';
-
-  $output .= theme('table', array(
-    'header' => $header,
-    'rows' => $rows,
-    'attributes' => array('id' => $table_id),
-  ));
-  $output .= backdrop_render($add_more);
-  $output .= backdrop_render_children($form);
-
-  backdrop_add_tabledrag($table_id, 'order', 'sibling', 'tour-ui-weight');
-
-  return $output;
-}
-
-/**
- * Returns HTML for a single step in the tour edit form.
- *
- * @param $variables
- *   An associative array containing:
- *   - form: A render element representing the form.
- *
- * @ingroup themeable
- */
-function theme_tour_content_row($content) {
-    $row['title'] = backdrop_render($content['title']);
-    $row['content'] = backdrop_render($content['content']);
-    $row['target'] = backdrop_render($content['target']);
-    $row['placement'] = backdrop_render($content['placement']);
-    $rows = array($row);
-
-    if (!empty($rows)) {
-    $header = array();
-    $output = theme('table', array('header' => $header, 'rows' => $rows));
-    
-    $attributes = backdrop_render($content['optional']);
-    
-    backdrop_add_js(backdrop_get_path('module', 'tour_ui') . '/tour_ui.js');
-    $toggle = ' <a class="requirements-toggle" href="#">' . t('more') . '</a>';
-    $details = '<div class="text table-filter-text-source"> ' . $toggle . '</div>' . '<div class="requirements">' . $attributes . '</div>';
-
-    $output .= $details;
-    return $output;
-  }
-  else {
-    return t('There are no items in the queue.');
-  }
-}
-
 /**
  * Implements hook_theme().
  *
