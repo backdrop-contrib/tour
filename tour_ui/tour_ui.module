@@ -164,15 +164,38 @@ function tour_ui_disable_tour_submit($form, &$form_state) {
  * Returns a form to edit a tour.
  *
  */
-function tour_ui_edit_tour($form, &$form_state, $name) {
+function tour_ui_edit_tour($form, &$form_state, $name = 'add') {
   backdrop_add_css(backdrop_get_path('module', 'tour_ui') . '/css/tour.admin.css');
 
   $form['#tree'] = TRUE;
   $form['#attributes']['id'] = 'tour-edit-table';
+  $form_state['is_new'] = ($name == 'add');
   
   $tour = array();
-  if($name && $tour = tour_load($name)) {
-    $form_state['tour'] = $tour;
+  if($form_state['is_new']) {
+    dpm('lpl');
+    $form['title'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Titles'),
+      '#default_value' => isset($tour['title']) ? $tour['title'] : '',
+    );
+    $form['name'] = array(
+      '#type' => 'machine_name',
+      '#title' => t('Title'),
+      '#default_value' => '',
+      '#maxlength' => 21,
+      '#machine_name' => array(
+        'exists' => 'tour_name_exists',
+        'source' => array('title'), 
+      ),
+    );
+    $form['editable'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Editable'),
+      '#default_value' => 1,
+    );
+  }
+  elseif ($name && $tour = tour_load($name)) {
     backdrop_set_title($tour['title']);
 
     $form['title'] = array(
@@ -193,35 +216,15 @@ function tour_ui_edit_tour($form, &$form_state, $name) {
       '#value' => $tour['editable'],
     );
   }
-  elseif($name =='add') {
-    $form['title'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Title'),
-      '#default_value' => isset($tour['title']) ? $tour['title'] : '',
-    );
-    $form['name'] = array(
-      '#type' => 'name',
-      '#default_value' => '',
-      '#maxlength' => 21,
-      '#name' => array(
-        'exists' => 'tour_name_exists',
-        'source' => array('title'), 
-      ),
-    );
-    $form['editable'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Editable'),
-      '#default_value' => 1,
-    );
-  }
   else {
     return array();
   }
+  $form_state['tour'] = $tour;
   
-  $form['name'] = array(
-    '#type' => 'value',
-    '#value' => $name,
-  );
+  // $form['name'] = array(
+    // '#type' => 'value',
+    // '#value' => $name,
+  // );
   $form['paths'] = array(
     '#type' => 'textarea',
     '#title' => t('Paths'),
@@ -258,24 +261,18 @@ function tour_ui_edit_tour($form, &$form_state, $name) {
     '#suffix' => '</div>',
   );
   if (empty($form_state['content'])) {
-    if($name == 'add') {
+    if($form_state['is_new']) {
       $form_state['content'][0] = tour_ui_get_default_step();
     }
     else {
       $form_state['content'] = $tour['steps'];
     }
   }
-  $form['content']['tour_table'] = array(
-    '#markup' => tour_ui_edit_tour_table($form, $form_state),
-  );
-  
-  $form['#attached'] = array(
-    'library' => array(
-      array('system', 'backdrop.ajax'),
-    ),
-  );
-  //$form['#attached']['backdrop_add_tabledrag'][] = array('field-overview', 'order', 'sibling', 'field-weight');
-  $form['add_more'] = array(
+  if(!empty($tour)) {
+    $form['content']['tour_table'] = array(
+      '#markup' => tour_ui_edit_tour_table($form, $form_state),
+    );
+    $form['add_more'] = array(
       '#type' => 'item',
       '#markup' => l(
         t('Add a step'),
@@ -289,10 +286,114 @@ function tour_ui_edit_tour($form, &$form_state, $name) {
         )
       ),
     );
+  }
+  
+  $form['#attached'] = array(
+    'library' => array(
+      array('system', 'backdrop.ajax'),
+    ),
+  );
+  $submit_text = $form_state['is_new'] ? t('Save and add steps') : t('Save Changes');
 
   $form['actions'] = array('#type' => 'actions');
-  $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save Changes'));
+  $form['actions']['submit'] = array('#type' => 'submit', '#value' => $submit_text);
   return $form;
+}
+
+/**
+ * Form validation handler for tour_ui_edit_tour().
+ *
+ * @see tour_ui_edit_tour_submit().
+ */
+function tour_ui_edit_tour_validate($form, &$form_state) {
+  form_state_values_clean($form_state);
+  
+  unset($form_state['values']['actions']);
+  
+  // Cleanup multiline textareas
+  $paths = tour_ui_format_lines($form_state['values']['paths']);
+  
+  // Validate paths
+  foreach($paths as $path) {
+    if(!menu_get_item($path) && $path != '<front>'){
+      form_set_error('paths', t('The path @path is invalid.', array('@path' => $path)));
+    }
+  }
+  $form_state['values']['paths'] = $paths;
+/*   
+  if(is_null($form_state['values']['content']) || (count($form_state['values']['content']) == 1 && $form_state['values']['content'][0]['delete'] == 1)) {
+    form_set_error('form', 'No steps to save');
+  }
+  foreach($form_state['values']['content'] as $key => $content) {
+    // Validate the optional settings textarea. Settings are input as one 
+    // key:value pair per line. We need to separate each line, then convert the 
+    // key:value string into array key and value.
+    
+    // First split the lines.
+    $optionals = tour_ui_format_lines($form_state['values']['content'][$key]['optional']);
+    $options = array();
+    // If we got some lines, now split the pairs, using ":" as the delimiter
+    if($optionals) {
+      foreach($optionals as $option) {
+        $split = explode(":", $option, 2);
+        if(isset( $split[1])) {
+          $options[$split[0]] = $split[1];
+        }
+        else {
+          // If the split didnt return a value then the delimiter was missing,
+          // or something else equally tragic. We bail out here.
+          form_set_error('optional', 'One or more of your optional settings are invalid.');
+        }
+      }
+    }
+    $form_state['values']['content'][$key]['optional'] = $options;
+    
+    if(!$content['content'] && !$content['title']) {
+      form_set_error('content', 'Steps must have a content or a title or both.');
+    }
+
+    if($content['delete']) {
+      unset($form_state['values']['content'][$key]);
+    }
+
+    unset($form_state['values']['content'][$key]['delete']);
+  }
+ */  
+  dpm($form_state['values']);
+}
+
+
+/**
+ * Form submission handler for tour_ui_edit_tour().
+ *
+ * @see tour_ui_edit_tour_validate().
+ */
+function tour_ui_edit_tour_submit($form, &$form_state) {  
+  form_state_values_clean($form_state);
+  $tour = $form_state['tour'];
+  $index = $form_state['step_index'];
+
+  $name = $form_state['values']['name'];
+  // unset($form_state['values']['name']);
+  // backdrop_sort($form_state['values']['content'], array('weight' => SORT_NUMERIC));
+  // $form_state['values']['content'] = array_values($form_state['values']['content']);
+  $data = $form_state['values'];
+  // $tour = array();
+  
+  // This is a new tour being added.
+  $config = config('tour.tour.' . $name);
+  foreach ($form_state['values'] as $key => $value) {
+    $config->set($key, $value);
+  }
+
+  $config->save();
+  cache_flush('cache');
+  if ($form_state['is_new']) {
+    $form_state['redirect'] = 'admin/config/user-interface/tour/ui/' . $name;
+  }
+  else {
+    $form_state['redirect'] = 'admin/config/user-interface/tour/ui';
+  }
 }
 
 /**
@@ -305,6 +406,7 @@ function tour_ui_edit_tour($form, &$form_state, $name) {
  *   Whether or not the field machine name is taken.
  */
 function tour_name_exists($value) {
+  dpm('koko');
   $tours = tour_load_all();
   return isset($tours[$value]);
 }
@@ -432,14 +534,18 @@ function tour_ui_edit_tour_table($form, &$form_state) {
  *
  * @ingroup themeable
  */
-function tour_ui_edit_step($form, &$form_state, $tour, $step_name) {
-  $tour = tour_load($name);
-  foreach ($tour['steps'] as $step) {
+function tour_ui_edit_step($form, &$form_state, $tour_name, $step_name = 'add') {
+  $tour = tour_load($tour_name);
+  foreach ($tour['steps'] as $index => $step) {
     if ($step['id'] == $step_name) {
       $tip = $step;
+      $form_state['step_index'] = $index;
       break;
     }
   }
+  dpm($tour);
+  $form_state['tour'] = $tour;
+  $form_state['step_name'] = $step_name;
   $form['title'] = array(
     '#type' => 'textfield',
     '#title' => t('Tip title'),
@@ -456,24 +562,14 @@ function tour_ui_edit_step($form, &$form_state, $tour, $step_name) {
     '#title' => t('Target'),
     '#default_value' => isset($step['target']) ? $step['target'] : '',
   );
-  $form['placement'] = array(
-    '#type' => 'select',
-    '#title' => t('Placement'),
-    '#options' => backdrop_map_assoc(array('top', 'bottom', 'right', 'left')),
-    '#default_value' => isset($step['placement']) ? $step['placement'] : '',
-  );
-  $form['optional'] = array(
-    '#type' => 'textarea',
-    '#title' => t('Optional fields'),
-    '#rows' => 4,
-    '#default_value' => isset($step['optional']) && !empty($step['optional']) ? _rebuild_step_options($step['optional']) : '',
-    '#description' => t('Enter one key:value per line, for example "xOffset: 15" (without the quotes)'),
-  );
 
   $form['actions'] = array('#type' => 'actions');
   $form['actions']['submit'] = array(
     '#type' => 'submit',
-    '#value' => t('Save Changes')
+    '#value' => t('Save Changes'),
+    '#ajax' => array(
+      'callback' => 'tour_ui_ajax_submit_dialog',
+    ),
   );
   $form['actions']['cancel'] = array(
     '#type' => 'submit',
@@ -487,12 +583,128 @@ function tour_ui_edit_step($form, &$form_state, $tour, $step_name) {
 
   return $form;
 }
+
+
+/**
+ * Form validation handler for tour_ui_edit_tour().
+ *
+ * @see tour_ui_edit_tour_submit().
+ */
+function tour_ui_edit_step_validate($form, &$form_state) {
+  form_state_values_clean($form_state);
+  
+  unset($form_state['values']['actions']);
+  
+/*   // Cleanup multiline textareas
+  $paths = tour_ui_format_lines($form_state['values']['paths']);
+  
+  // Validate paths
+  foreach($paths as $path) {
+    if(!menu_get_item($path) && $path != '<front>'){
+      form_set_error('paths', t('The path @path is invalid.', array('@path' => $path)));
+    }
+  }
+  $form_state['values']['paths'] = $paths;
+  
+  if(is_null($form_state['values']['content']) || (count($form_state['values']['content']) == 1 && $form_state['values']['content'][0]['delete'] == 1)) {
+    form_set_error('form', 'No steps to save');
+  }
+ */  
+  foreach($form_state['values']['content'] as $key => $content) {
+    // Validate the optional settings textarea. Settings are input as one 
+    // key:value pair per line. We need to separate each line, then convert the 
+    // key:value string into array key and value.
+    
+    // First split the lines.
+    $optionals = tour_ui_format_lines($form_state['values']['content'][$key]['optional']);
+    $options = array();
+    // If we got some lines, now split the pairs, using ":" as the delimiter
+    if($optionals) {
+      foreach($optionals as $option) {
+        $split = explode(":", $option, 2);
+        if(isset( $split[1])) {
+          $options[$split[0]] = $split[1];
+        }
+        else {
+          // If the split didnt return a value then the delimiter was missing,
+          // or something else equally tragic. We bail out here.
+          form_set_error('optional', 'One or more of your optional settings are invalid.');
+        }
+      }
+    }
+    $form_state['values']['content'][$key]['optional'] = $options;
+    
+    if(!$content['content'] && !$content['title']) {
+      form_set_error('content', 'Steps must have a content or a title or both.');
+    }
+
+    if($content['delete']) {
+      unset($form_state['values']['content'][$key]);
+    }
+
+    unset($form_state['values']['content'][$key]['delete']);
+  }
+  dpm($form_state['values']);
+} 
+
+/**
+ * Form submission handler for tour_ui_edit_tour().
+ *
+ * @see tour_ui_edit_tour_validate().
+ */
+function tour_ui_edit_step_submit($form, &$form_state) {  
+  $tour = $form_state['tour'];
+  $index = $form_state['step_index'];
+
+  // $name = $form_state['values']['name'];
+  // unset($form_state['values']['name']);
+  // backdrop_sort($form_state['values']['content'], array('weight' => SORT_NUMERIC));
+  // $form_state['values']['content'] = array_values($form_state['values']['content']);
+  // $data = $form_state['values'];
+  // $tour = array();
+  
+  // This is a new tour being added.
+  $config = config('tour.tour.' . $tour['name']);
+  $data = $config->get();
+  if ($form_state['step_name'] == 'add') {
+    $data['steps'][] = $form_state['values'];
+  }
+  else {
+    $data['steps'][$index] = $form_state['values'];
+  }
+
+  $config->setData($data);
+  $config->save();
+  backdrop_static_reset('tour_load_all');
+  cache_flush('cache');
+  $form_state['redirect'] = 'admin/config/user-interface/tour/ui/' . $tour['name'];
+}
+
+
 /**
  * AJAX handler that cancels the edit dialog.
  */
 function tour_ui_ajax_cancel_dialog($form, $form_state) {
   $commands = array();
   $commands[] = ajax_command_close_modal_dialog();
+
+  return array(
+    '#type' => 'ajax',
+    '#commands' => $commands,
+  );
+}
+
+/**
+ * AJAX handler that cancels the edit dialog.
+ */
+function tour_ui_ajax_submit_dialog($form, $form_state) {
+  $commands = array();
+  $tour_ui_edit_form = backdrop_get_form('tour_ui_edit_tour', $form_state['tour']['name']);
+  dpm($tour_ui_edit_form);
+  $step_table_html = backdrop_render($tour_ui_edit_form['content']);
+  dpm($step_table_html);
+  $commands[] = ajax_command_close_modal_dialog();
+  $commands[] = ajax_command_replace('#steps-fieldset-wrapper', $step_table_html);
 
   return array(
     '#type' => 'ajax',
@@ -555,93 +767,6 @@ function tour_ui_get_default_step($max_weight = 0) {
 }
 
 /**
- * Form validation handler for tour_ui_edit_tour().
- *
- * @see tour_ui_edit_tour_submit().
- */
-/* function tour_ui_edit_tour_validate($form, &$form_state) {
-  form_state_values_clean($form_state);
-  
-  unset($form_state['values']['actions']);
-  
-  // Cleanup multiline textareas
-  $paths = tour_ui_format_lines($form_state['values']['paths']);
-  
-  // Validate paths
-  foreach($paths as $path) {
-    if(!menu_get_item($path) && $path != '<front>'){
-      form_set_error('paths', t('The path @path is invalid.', array('@path' => $path)));
-    }
-  }
-  $form_state['values']['paths'] = $paths;
-  
-  if(is_null($form_state['values']['content']) || (count($form_state['values']['content']) == 1 && $form_state['values']['content'][0]['delete'] == 1)) {
-    form_set_error('form', 'No steps to save');
-  }
-  
-  foreach($form_state['values']['content'] as $key => $content) {
-    // Validate the optional settings textarea. Settings are input as one 
-    // key:value pair per line. We need to separate each line, then convert the 
-    // key:value string into array key and value.
-    
-    // First split the lines.
-    $optionals = tour_ui_format_lines($form_state['values']['content'][$key]['optional']);
-    $options = array();
-    // If we got some lines, now split the pairs, using ":" as the delimiter
-    if($optionals) {
-      foreach($optionals as $option) {
-        $split = explode(":", $option, 2);
-        if(isset( $split[1])) {
-          $options[$split[0]] = $split[1];
-        }
-        else {
-          // If the split didnt return a value then the delimiter was missing,
-          // or something else equally tragic. We bail out here.
-          form_set_error('optional', 'One or more of your optional settings are invalid.');
-        }
-      }
-    }
-    $form_state['values']['content'][$key]['optional'] = $options;
-    
-    if(!$content['content'] && !$content['title']) {
-      form_set_error('content', 'Steps must have a content or a title or both.');
-    }
-
-    if($content['delete']) {
-      unset($form_state['values']['content'][$key]);
-    }
-
-    unset($form_state['values']['content'][$key]['delete']);
-  }
-} 
- */
-/**
- * Form submission handler for tour_ui_edit_tour().
- *
- * @see tour_ui_edit_tour_validate().
- */
-function tour_ui_edit_tour_submit($form, &$form_state) {  
-  $name = $form_state['values']['name'];
-  unset($form_state['values']['name']);
-  backdrop_sort($form_state['values']['content'], array('weight' => SORT_NUMERIC));
-  $form_state['values']['content'] = array_values($form_state['values']['content']);
-  $data = $form_state['values'];
-  $tour = array();
-  
-  // This is a new tour being added.
-  if($name == 'add') {
-    $config = config('tour.tour.' . $form_state['values']['name']);
-  }
-  else {
-    $config = config($form_state['values']['config_name']);
-  }
-  $config->set('tour', $data);
-  $config->save();
-  cache_flush('cache');
-  $form_state['redirect'] = 'admin/config/user-interface/tour/ui';
-}
-
-/**
  * Cleans up input from multiline textareas.
  *
  */
@@ -658,10 +783,6 @@ function tour_ui_format_lines($text) {
  */
 function tour_ui_theme() {
   return array(
-    // Theme function for the 'simple' example.
-    'tour_ui_edit_tour' => array(
-      'render element' => 'form',
-    ),
     'tour_content_row' => array(
       'render element' => NULL,
     ),
