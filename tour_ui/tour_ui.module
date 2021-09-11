@@ -549,16 +549,19 @@ function tour_ui_edit_step($form, &$form_state, $tour_name, $step_name = 'add') 
   $form['title'] = array(
     '#type' => 'textfield',
     '#title' => t('Tip title'),
+    '#required' => TRUE,
     '#default_value' => isset($step['title']) ? $step['title'] : '',
   );
   $form['content'] = array(
     '#type' => 'textarea',
     '#title' => t('Tip content'),
     '#rows' => 2,
+    '#required' => TRUE,
     '#default_value' => isset($step['content']) ? $step['content'] : '',
   );
   $form['target'] = array(
     '#type' => 'textfield',
+    '#required' => TRUE,
     '#title' => t('Target'),
     '#default_value' => isset($step['target']) ? $step['target'] : '',
   );
@@ -699,12 +702,19 @@ function tour_ui_ajax_cancel_dialog($form, $form_state) {
  */
 function tour_ui_ajax_submit_dialog($form, $form_state) {
   $commands = array();
-  $tour_ui_edit_form = backdrop_get_form('tour_ui_edit_tour', $form_state['tour']['name']);
-  dpm($tour_ui_edit_form);
-  $step_table_html = backdrop_render($tour_ui_edit_form['content']);
-  dpm($step_table_html);
   $commands[] = ajax_command_close_modal_dialog();
-  $commands[] = ajax_command_replace('#steps-fieldset-wrapper', $step_table_html);
+  if (form_get_errors()) {
+    $html = '';
+    $html .= theme('status_messages');
+    $html .= backdrop_render($form);
+    $title = isset($form['#title']) ? $form['#title'] : backdrop_get_title();
+    $commands[] = ajax_command_open_modal_dialog($title, $html, array('dialogClass' => 'tour-dialog'));
+  }
+  else {
+    $tour_ui_edit_form = backdrop_get_form('tour_ui_edit_tour', $form_state['tour']['name']);
+    $step_table_html = backdrop_render($tour_ui_edit_form['content']);
+    $commands[] = ajax_command_replace('#steps-fieldset-wrapper', $step_table_html);
+  }
 
   return array(
     '#type' => 'ajax',
