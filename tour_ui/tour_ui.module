@@ -274,10 +274,9 @@ function tour_ui_edit_tour($form, &$form_state, $tour = 'add') {
     }
   //}
   if(!empty($tour) && !$form_state['is_new']) {
-    $form['content']['tour_table'] = array(
-      '#markup' => tour_ui_edit_tour_table($form, $form_state),
-    );
-    $form['add_more'] = array(
+    $form['content']['add_more'] = array(
+      '#prefix' => '<ul class="action-links"><li>',
+      '#suffix' => '</li></ul>',
       '#type' => 'item',
       '#markup' => l(
         t('Add a step'),
@@ -290,6 +289,9 @@ function tour_ui_edit_tour($form, &$form_state, $tour = 'add') {
           )
         )
       ),
+    );
+    $form['content']['tour_table'] = array(
+      '#markup' => tour_ui_edit_tour_table($form, $form_state),
     );
   }
   
