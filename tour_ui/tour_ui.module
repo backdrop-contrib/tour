@@ -22,20 +22,20 @@ function tour_ui_menu() {
     'access arguments' => array('access administration pages'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
-  
-  $items['admin/config/user-interface/tour/ui/%'] = array(
-    'title' => 'tour Editor',
-    'page callback' => 'backdrop_get_form',
-    'page arguments' => array('tour_ui_edit_tour', 5),
-    'access arguments' => array('access administration pages'),
-  );
-	$items['admin/config/user-interface/tour/ui/%/disable'] = array(
+	$items['admin/config/user-interface/tour/ui/%tour_ui_tempstore/disable'] = array(
 		'title' => 'Disable tour',
 		'page callback' => 'backdrop_get_form',
 		'page arguments' => array('tour_ui_disable_tour', 5),
     'access arguments' => array('access administration pages'),
 		'type' => MENU_CALLBACK,
 	);  
+  
+  $items['admin/config/user-interface/tour/ui/%tour_ui_tempstore'] = array(
+    'title' => 'tour Editor',
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => array('tour_ui_edit_tour', 5),
+    'access arguments' => array('access administration pages'),
+  );
   $items['admin/config/user-interface/tour/ui/add'] = array(
     'title' => 'Add new tour',
     'page callback' => 'backdrop_get_form',
@@ -43,14 +43,14 @@ function tour_ui_menu() {
     'access arguments' => array('access administration pages'),
     'type' => MENU_LOCAL_ACTION,
   );
-  $items['admin/config/user-interface/tour/ui/%/step/%'] = array(
+  $items['admin/config/user-interface/tour/ui/%tour_ui_tempstore/step/%'] = array(
     'title' => 'Edit step',
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('tour_ui_edit_step', 5, 7),
     'access arguments' => array('access administration pages'),
     'type' => MENU_LOCAL_ACTION,
   );
-  $items['admin/config/user-interface/tour/ui/%/step/add'] = array(
+  $items['admin/config/user-interface/tour/ui/%tour_ui_tempstore/step/add'] = array(
     'title' => 'Edit step',
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('tour_ui_edit_step', 5, 7),
@@ -91,7 +91,7 @@ function tour_ui_menu() {
 function tour_ui_list_tour_tours() {
   $items = tour_load_all();
   $rows = array();
-  dpm($items);
+
   foreach ($items as $name => $item) {
     // Set variable for enabled state.
     $state = $item['enabled'] ? 'Enabled' : 'Disabled';
@@ -124,8 +124,7 @@ function tour_ui_list_tour_tours() {
  * Returns the confirm form to disable a tour.
  *
  */
-function tour_ui_disable_tour($form, &$form_state, $name) {
-  $tour = tour_load($name);
+function tour_ui_disable_tour($form, &$form_state, $tour) {
 	$form = array();
 	$form['tour'] = array(
 		'#type' => 'value',
@@ -164,16 +163,24 @@ function tour_ui_disable_tour_submit($form, &$form_state) {
  * Returns a form to edit a tour.
  *
  */
-function tour_ui_edit_tour($form, &$form_state, $name = 'add') {
+function tour_ui_edit_tour($form, &$form_state, $tour = 'add') {
+  dpm($tour);
   backdrop_add_css(backdrop_get_path('module', 'tour_ui') . '/css/tour.admin.css');
 
   $form['#tree'] = TRUE;
   $form['#attributes']['id'] = 'tour-edit-table';
-  $form_state['is_new'] = ($name == 'add');
+  $form_state['is_new'] = ($tour == 'add');
+  $message = t('This form has unsaved changes. Click "Save" to make changes permanent or "Cancel" to discard changes.');
+
+  $form['messages'] = array(
+    '#markup' => !empty($tour['locked']) ? '<div class="messages warning">' . $message . '</div>' : '',
+    '#weight' => -100,
+    // Prefix/suffix used to identify in AJAX requests.
+    '#prefix' => '<div id="layout-messages">',
+    '#suffix' => '</div>',
+  );
   
-  $tour = array();
   if($form_state['is_new']) {
-    dpm('lpl');
     $form['title'] = array(
       '#type' => 'textfield',
       '#title' => t('Titles'),
@@ -195,17 +202,13 @@ function tour_ui_edit_tour($form, &$form_state, $name = 'add') {
       '#default_value' => 1,
     );
   }
-  elseif ($name && $tour = tour_load($name)) {
+  else {
     backdrop_set_title($tour['title']);
 
     $form['title'] = array(
       '#type' => 'textfield',
       '#title' => t('Title'),
       '#default_value' => isset($tour['title']) ? $tour['title'] : '',
-    );
-    $form['config_name'] = array(
-      '#type' => 'value',
-      '#value' => $tour['config_name'],
     );
     $form['name'] = array(
       '#type' => 'value',
@@ -215,9 +218,6 @@ function tour_ui_edit_tour($form, &$form_state, $name = 'add') {
       '#type' => 'value',
       '#value' => $tour['editable'],
     );
-  }
-  else {
-    return array();
   }
   $form_state['tour'] = $tour;
   
@@ -260,15 +260,12 @@ function tour_ui_edit_tour($form, &$form_state, $name = 'add') {
     '#prefix' => '<div id="steps-fieldset-wrapper">',
     '#suffix' => '</div>',
   );
-  if (empty($form_state['content'])) {
-    if($form_state['is_new']) {
-      $form_state['content'][0] = tour_ui_get_default_step();
-    }
-    else {
+  //if (empty($form_state['content'])) {
+    if(!$form_state['is_new']) {
       $form_state['content'] = $tour['steps'];
     }
-  }
-  if(!empty($tour)) {
+  //}
+  if(!empty($tour) && !$form_state['is_new']) {
     $form['content']['tour_table'] = array(
       '#markup' => tour_ui_edit_tour_table($form, $form_state),
     );
@@ -296,8 +293,32 @@ function tour_ui_edit_tour($form, &$form_state, $name = 'add') {
   $submit_text = $form_state['is_new'] ? t('Save and add steps') : t('Save Changes');
 
   $form['actions'] = array('#type' => 'actions');
-  $form['actions']['submit'] = array('#type' => 'submit', '#value' => $submit_text);
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => $submit_text,
+  );
+  if(!empty($tour) && !$form_state['is_new']) {
+    $form['actions']['cancel'] = array(
+      '#type' => 'submit',
+      '#value' => t('Cancel'),
+      '#validate' => array(),
+      '#limit_validation_errors' => array(),
+      '#submit' => array('tour_ui_edit_tour_reset'),
+    );
+  }
   return $form;
+}
+
+/**
+ * Form validation handler for tour_ui_edit_tour().
+ *
+ * @see tour_ui_edit_tour_submit().
+ */
+function tour_ui_edit_tour_reset($form, &$form_state) {
+  $tour = $form_state['tour'];
+  tour_ui_clear_tempstore($tour['name']);
+  backdrop_set_message(t('Tour changes discarded.'));
+  $form_state['redirect'] = 'admin/config/user-interface/tour';
 }
 
 /**
@@ -359,7 +380,6 @@ function tour_ui_edit_tour_validate($form, &$form_state) {
     unset($form_state['values']['content'][$key]['delete']);
   }
  */  
-  dpm($form_state['values']);
 }
 
 
@@ -378,16 +398,20 @@ function tour_ui_edit_tour_submit($form, &$form_state) {
   // backdrop_sort($form_state['values']['content'], array('weight' => SORT_NUMERIC));
   // $form_state['values']['content'] = array_values($form_state['values']['content']);
   $data = $form_state['values'];
-  // $tour = array();
+  dpm($tour);
   
-  // This is a new tour being added.
   $config = config('tour.tour.' . $name);
   foreach ($form_state['values'] as $key => $value) {
     $config->set($key, $value);
   }
+  // This is not a new tour being added so save steps from tempstore.
+  if (!$form_state['is_new']) {
+    $config->set('steps', $tour['steps']);
+  }
 
   $config->save();
   cache_flush('cache');
+  tour_ui_clear_tempstore($name);
   if ($form_state['is_new']) {
     $form_state['redirect'] = 'admin/config/user-interface/tour/ui/' . $name;
   }
@@ -406,7 +430,6 @@ function tour_ui_edit_tour_submit($form, &$form_state) {
  *   Whether or not the field machine name is taken.
  */
 function tour_name_exists($value) {
-  dpm('koko');
   $tours = tour_load_all();
   return isset($tours[$value]);
 }
@@ -534,8 +557,7 @@ function tour_ui_edit_tour_table($form, &$form_state) {
  *
  * @ingroup themeable
  */
-function tour_ui_edit_step($form, &$form_state, $tour_name, $step_name = 'add') {
-  $tour = tour_load($tour_name);
+function tour_ui_edit_step($form, &$form_state, $tour, $step_name = 'add') {
   $step = array();
   if ($step_name != 'add') {
     foreach ($tour['steps'] as $index => $tip) {
@@ -550,7 +572,6 @@ function tour_ui_edit_step($form, &$form_state, $tour_name, $step_name = 'add') 
       }
     }
   }
-  dpm($tour);
   $form_state['tour'] = $tour;
   $form_state['step_name'] = $step_name;
   $form['title'] = array(
@@ -578,7 +599,7 @@ function tour_ui_edit_step($form, &$form_state, $tour_name, $step_name = 'add') 
     '#type' => 'submit',
     '#value' => t('Save Changes'),
     '#ajax' => array(
-      'callback' => 'tour_ui_ajax_submit_dialog',
+      'callback' => 'tour_ui_step_ajax_dialog_submit',
     ),
   );
   $form['actions']['cancel'] = array(
@@ -609,9 +630,8 @@ function tour_ui_edit_step_validate($form, &$form_state) {
     module_load_include('inc', 'system', 'system.admin');
     $id = system_transliterate_machine_name($form_state['values']['title'], array());
 
-    $form_state['values']['id'] = tour_ui_step_unique_id($data['steps'], $id);
+    $form_state['values']['id'] = tour_ui_step_unique_id($form_state['tour']['steps'], $id);
   }
-  dpm($form_state['values']);
 } 
 
 /**
@@ -620,11 +640,11 @@ function tour_ui_edit_step_validate($form, &$form_state) {
  * @see tour_ui_edit_tour_validate().
  */
 function tour_ui_edit_step_submit($form, &$form_state) {  
-  $tour = $form_state['tour'];
+  $data = $form_state['tour'];
   $step = $form_state['values'];
 
-  $config = config('tour.tour.' . $tour['name']);
-  $data = $config->get();
+  // $data = tour_ui_tempstore_load($tour['name']);
+  //$data = $config->get();
 
   if (isset($form_state['step_index'])) {
     $index = (int) $form_state['step_index'];
@@ -634,11 +654,12 @@ function tour_ui_edit_step_submit($form, &$form_state) {
     $data['steps'][] = $step;
   }
 
-  $config->setData($data);
-  $config->save();
+  // $config->setData($data);
+  // $config->save();
+  tour_ui_set_tempstore($data);
   backdrop_static_reset('tour_load_all');
   cache_flush('cache');
-  $form_state['redirect'] = 'admin/config/user-interface/tour/ui/' . $tour['name'];
+  $form_state['redirect'] = 'admin/config/user-interface/tour/ui/' . $data['name'];
 }
 
 
@@ -676,7 +697,7 @@ function tour_ui_ajax_cancel_dialog($form, $form_state) {
 /**
  * AJAX handler that cancels the edit dialog.
  */
-function tour_ui_ajax_submit_dialog($form, $form_state) {
+function tour_ui_step_ajax_dialog_submit($form, $form_state) {
   $commands = array();
   $commands[] = ajax_command_close_modal_dialog();
   if (form_get_errors()) {
@@ -687,7 +708,7 @@ function tour_ui_ajax_submit_dialog($form, $form_state) {
     $commands[] = ajax_command_open_modal_dialog($title, $html, array('dialogClass' => 'tour-dialog'));
   }
   else {
-    $tour_ui_edit_form = backdrop_get_form('tour_ui_edit_tour', $form_state['tour']['name']);
+    $tour_ui_edit_form = backdrop_get_form('tour_ui_edit_tour', $form_state['tour']);
     $step_table_html = backdrop_render($tour_ui_edit_form['content']);
     $commands[] = ajax_command_replace('#steps-fieldset-wrapper', $step_table_html);
   }
@@ -794,4 +815,50 @@ function tour_ui_config_info() {
     'group' => t('tour'),
   );
   return $prefixes;
+}
+
+
+/**
+ * Get a tour currently being edited from the tempstore.
+ *
+ * @param string $name
+ *   The machine name of the tour to load.
+ */
+function tour_ui_tempstore_load($name) {
+  $caches = &backdrop_static(__FUNCTION__, array());
+  if (!isset($caches[$name])) {
+    // Try loading from tempstore first to get in-progress changes.
+    $item = tempstore_get('tour', $name);
+    if (!$item) {
+      $item = tour_load($name);
+    }
+    $caches[$name] = $item;
+  }
+
+  return $caches[$name];
+}
+
+/**
+ * Store changes to a tour in the temporary store.
+ *
+ * @param $item
+ *   The tour to save into tempstore.
+ */
+function tour_ui_set_tempstore($item) {
+  if (empty($item['name'])) {
+    return;
+  }
+
+  $item['locked'] = array(
+    'uid' => $GLOBALS['user']->uid,
+    'updated' => REQUEST_TIME,
+  );
+  tempstore_set('tour', $item['name'], $item, 604800);
+}
+
+/**
+ * Remove an tour from the object cache.
+ */
+function tour_ui_clear_tempstore($name) {
+  tempstore_clear('tour', $name);
 }
