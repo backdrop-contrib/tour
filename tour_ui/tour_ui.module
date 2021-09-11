@@ -50,6 +50,14 @@ function tour_ui_menu() {
     'access arguments' => array('access administration pages'),
     'type' => MENU_LOCAL_ACTION,
   );
+  $items['admin/config/user-interface/tour/ui/%tour_ui_tempstore/step/%/delete'] = array(
+    'title' => 'Delete step',
+    'page callback' => 'tour_ui_delete_step',
+    'page arguments' => array(5, 7),
+    'access arguments' => array('access administration pages'),
+    'theme callback' => 'ajax_base_page_theme',
+    'type' => MENU_CALLBACK,
+  );
   $items['admin/config/user-interface/tour/ui/%tour_ui_tempstore/step/add'] = array(
     'title' => 'Edit step',
     'page callback' => 'backdrop_get_form',
@@ -410,6 +418,7 @@ function tour_ui_edit_tour_submit($form, &$form_state) {
   }
 
   $config->save();
+  backdrop_static_reset('tour_load_all');
   cache_flush('cache');
   tour_ui_clear_tempstore($name);
   if ($form_state['is_new']) {
@@ -483,6 +492,7 @@ function _rebuild_step_options($optionals) {
 function tour_ui_edit_tour_table($form, &$form_state) {
   $tour = $form_state['tour'];
   $form = array();
+  dpm($form_state['content']);
   foreach ($form_state['content'] as $i => $step) {
     
     $form['content'][$i]['title'] = array(
@@ -509,7 +519,10 @@ function tour_ui_edit_tour_table($form, &$form_state) {
         ),
         'delete' => array(
           'title' => t('Delete'),
-          'href' => 'admin/config/user-interface/tour/ui/' . $tour['name'] . '/step/' . $step['id'],
+          'href' => 'admin/config/user-interface/tour/ui/' . $tour['name'] . '/step/' . $step['id'] . '/delete',
+          'attributes' => array(
+            'class' => array('use-ajax'),
+          ),
         ),
       ),
     );
@@ -661,6 +674,42 @@ function tour_ui_edit_step_submit($form, &$form_state) {
   cache_flush('cache');
   $form_state['redirect'] = 'admin/config/user-interface/tour/ui/' . $data['name'];
 }
+
+
+/**
+ * Callback to delete a step.
+ */
+function tour_ui_delete_step($tour, $step) {
+  foreach ($tour['steps'] as $index => $tip) {
+    if (isset($tip['id']) && $tip['id'] == $step) {
+      $removed_step = $tour['steps'][$index];
+      unset($tour['steps'][$index]);
+      break;
+    }
+  }
+
+  tour_ui_set_tempstore($tour);
+  $commands = array();
+  if (backdrop_is_ajax()) {
+    $tour_ui_edit_form = backdrop_get_form('tour_ui_edit_tour', $tour);
+    $step_table_html = backdrop_render($tour_ui_edit_form['content']);
+    $commands[] = ajax_command_replace('#steps-fieldset-wrapper', $step_table_html);
+
+    return array(
+      '#type' => 'ajax',
+      '#commands' => $commands,
+    );
+  }
+  else {
+    backdrop_set_message(t('Step "@title" removed.', array('@title' => $removed_step['title'])));
+    backdrop_goto('admin/config/user-interface/tour/ui/' . $tour['name']);
+  }
+
+  backdrop_static_reset('tour_load_all');
+  cache_flush('cache');
+  //$form_state['redirect'] = 'admin/config/user-interface/tour/ui/' . $tour['name'];
+}
+
 
 
 /**
