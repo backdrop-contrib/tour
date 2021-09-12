@@ -264,15 +264,10 @@ function tour_ui_edit_tour($form, &$form_state, $tour = 'add') {
   );
   $form['content'] = array(
     '#type' => 'container',
-    '#attributes' => array('id' => array('tour-content')),
+    '#attributes' => array('class' => array('tour-content')),
     '#prefix' => '<div id="steps-fieldset-wrapper">',
     '#suffix' => '</div>',
   );
-  //if (empty($form_state['content'])) {
-    if(!$form_state['is_new']) {
-      $form_state['content'] = $tour['steps'];
-    }
-  //}
   if(!empty($tour) && !$form_state['is_new']) {
     $form['content']['add_more'] = array(
       '#prefix' => '<ul class="action-links"><li>',
@@ -290,9 +285,52 @@ function tour_ui_edit_tour($form, &$form_state, $tour = 'add') {
         )
       ),
     );
-    $form['content']['tour_table'] = array(
-      '#markup' => tour_ui_edit_tour_table($form, $form_state),
-    );
+  }
+  $form['content']['table'] = array(
+    '#type' => 'container',
+    '#theme' => 'tour_ui_edit_tour_table',
+    '#attributes' => array('class' => array('tour-table')),
+  );
+  //if (empty($form_state['content'])) {
+    if(!$form_state['is_new']) {
+      $form_state['content'] = $tour['steps'];
+    }
+  //}
+  if(!empty($tour) && !$form_state['is_new']) {
+    foreach ($form_state['content'] as $i => $step) {
+      
+      $form['content']['table'][$i]['title'] = array(
+        '#markup' => $step['title'],
+      );
+      $form['content']['table'][$i]['weight'] = array(
+        '#type' => 'weight',
+        '#title' => t('Weight'),
+        '#default_value' => isset($step['weight']) ? $step['weight'] : 10,
+        '#delta' => 10,
+        '#title_display' => 'invisible',
+      );
+      $form['content']['table'][$i]['operations'] = array(
+        '#type' => 'dropbutton',
+        '#links' => array(
+          'configure' => array(
+            'title' => t('Edit'),
+            'href' => 'admin/config/user-interface/tour/ui/' . $tour['name'] . '/step/' . $step['id'],
+            'attributes' => array(
+              'class' => array('use-ajax'),
+              'data-dialog' => TRUE,
+              'data-dialog-options' => json_encode(array('dialogClass' => 'tour-dialog')),
+            ),
+          ),
+          'delete' => array(
+            'title' => t('Delete'),
+            'href' => 'admin/config/user-interface/tour/ui/' . $tour['name'] . '/step/' . $step['id'] . '/delete',
+            'attributes' => array(
+              'class' => array('use-ajax'),
+            ),
+          ),
+        ),
+      );
+    }
   }
   
   $form['#attached'] = array(
@@ -408,7 +446,7 @@ function tour_ui_edit_tour_submit($form, &$form_state) {
   // backdrop_sort($form_state['values']['content'], array('weight' => SORT_NUMERIC));
   // $form_state['values']['content'] = array_values($form_state['values']['content']);
   $data = $form_state['values'];
-  dpm($tour);
+  dpm($data);
   
   $config = config('tour.tour.' . $name);
   foreach ($form_state['values'] as $key => $value) {
@@ -491,61 +529,28 @@ function _rebuild_step_options($optionals) {
  *
  * @ingroup themeable
  */
-function tour_ui_edit_tour_table($form, &$form_state) {
-  $tour = $form_state['tour'];
-  $form = array();
-  dpm($form_state['content']);
-  foreach ($form_state['content'] as $i => $step) {
-    
-    $form['content'][$i]['title'] = array(
-      '#markup' => $step['title'],
-    );
-    $form['content'][$i]['weight'] = array(
-      '#type' => 'weight',
-      '#title' => t('Weight'),
-      '#default_value' => isset($step['weight']) ? $step['weight'] : 10,
-      '#delta' => 10,
-      '#title_display' => 'invisible',
-    );
-    $form['content'][$i]['operations'] = array(
-      '#type' => 'dropbutton',
-      '#links' => array(
-        'configure' => array(
-          'title' => t('Edit'),
-          'href' => 'admin/config/user-interface/tour/ui/' . $tour['name'] . '/step/' . $step['id'],
-          'attributes' => array(
-            'class' => array('use-ajax'),
-            'data-dialog' => TRUE,
-            'data-dialog-options' => json_encode(array('dialogClass' => 'tour-dialog')),
-          ),
-        ),
-        'delete' => array(
-          'title' => t('Delete'),
-          'href' => 'admin/config/user-interface/tour/ui/' . $tour['name'] . '/step/' . $step['id'] . '/delete',
-          'attributes' => array(
-            'class' => array('use-ajax'),
-          ),
-        ),
-      ),
-    );
-  }
+function theme_tour_ui_edit_tour_table($variables) {
+  dpm($variables);
+  $form = $variables['form'];
+  // $tour = $form_state['tour'];
 
   $rows = array();
   $output = '';
   
-  foreach (element_children($form['content']) as $id) {
+  foreach (element_children($form) as $id) {
 
-    $form['content'][$id]['weight']['#attributes']['class'] = array('tour-ui-weight');
+    $form[$id]['weight']['#attributes']['class'] = array('tour-ui-weight');
     $rows[] = array(
       'data' => array(
-        backdrop_render($form['content'][$id]['title']),
-        backdrop_render($form['content'][$id]['operations']),
+        backdrop_render($form[$id]['title']),
+        backdrop_render($form[$id]['operations']),
+        backdrop_render($form[$id]['weight']),
       ),
       'class' => array('draggable'),
     );
   }
 
-  $header = array(t('Steps'), t('Configure'));
+  $header = array(t('Steps'), t('Configure'), t('Weight'));
 
   $table_id = 'tour-content';
 
@@ -841,8 +846,8 @@ function tour_ui_format_lines($text) {
  */
 function tour_ui_theme() {
   return array(
-    'tour_content_row' => array(
-      'render element' => NULL,
+    'tour_ui_edit_tour_table' => array(
+      'render element' => 'form',
     ),
     'tour_demo' => array(
       'variables' => array(),
