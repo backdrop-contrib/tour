@@ -49,8 +49,6 @@ Tour config files may have the following settings:
 - auto_start: (values 0 or 1) Whether the tour will start automatically on 
 navigating to the 
   tour path.
-- play_once: (values 0 or 1) For auto_start tours, whether the tour plays once,
-  or every time you navigate to the path.
 - steps: (An array of tour steps)
 
 Tour content(steps) may have the following values:

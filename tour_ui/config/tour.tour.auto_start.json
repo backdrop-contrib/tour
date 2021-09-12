@@ -10,7 +10,6 @@
         ],
         "description": "This Demo Tour is triggered automatically.",
         "auto_start": 1,
-        "play_once": 0,
         "enabled": 1,
         "content": {
             "0": {

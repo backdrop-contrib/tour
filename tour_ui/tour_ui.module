@@ -252,11 +252,6 @@ function tour_ui_edit_tour($form, &$form_state, $tour = 'add') {
     '#title' => t('Auto Start'),
     '#default_value' => isset($tour['auto_start']) ? $tour['auto_start'] : '',
   );
-  $form['play_once'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Play Once'),
-    '#default_value' => isset($tour['play_once']) ? $tour['play_once'] : '',
-  );
   $form['enabled'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enabled'),
