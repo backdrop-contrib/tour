@@ -1,0 +1,251 @@
+<?php
+
+
+/**
+* Implements hook_menu().
+*/
+function tour_builder_menu() {
+  $items['tour-builder'] = array(
+  'title' => 'tour_builder form',
+  'page callback' => 'tour_builder_form',
+  'access callback' => TRUE,
+  'type' => MENU_CALLBACK,
+  );
+  $items['tour-builder-ajax'] = array(
+    'page callback' => 'tour_builder_output',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+    'theme callback' => 'ajax_base_page_theme',
+  );
+  return $items;
+}
+
+function tour_builder_output() {
+  $options = isset($_GET['options']) ? backdrop_json_decode($_GET['options']) : array();
+
+  // Check the token against the serialized options to prevent random access to
+  // the token browser page.
+  if (!isset($_GET['token']) || !backdrop_valid_token($_GET['token'], 'token-tree:' . serialize($options))) {
+   // return MENU_ACCESS_DENIED;
+  }
+
+  $tree = '<div>' . backdrop_render(backdrop_get_form('tour_builder_output_form')) . '</div>';
+
+  // Return as a renderable so the Backdrop dialog system can use the title.
+  $dialog_options = array(
+    'dialogClass' => 'tour-edit-dialog',
+    'modal' => FALSE,
+    'draggable' => TRUE,
+    'resizeable' => FALSE,
+    'autoResize' => FALSE,
+    'width' => '600',
+    'height' => '500',
+  );
+  $commands = array(ajax_command_open_dialog('#tour-edit-dialog', t('Available tokens'), $tree, $dialog_options));
+  $return = array(
+    '#type' => 'ajax',
+    '#commands' => $commands,
+  );
+  return $return;
+}
+/**
+ * Implements hook_autoload_info().
+ */
+function tour_builder_form() {
+  // backdrop_add_js(backdrop_get_path('module', 'tour_builder') . '/js/tour_builder.js');
+    $form['block_list'] = array(
+      '#type' => 'item',
+      '#markup' => l(
+        t('Click me!'),
+        'tour-builder-ajax',
+        array(
+          'attributes' => array(
+            'class' => array('use-ajax tour-edit-link'),
+            // 'data-dialog' => TRUE,
+            // 'data-dialog-options' => json_encode(array('width' => 200, 'maxWidth' => 200, 'modal' => false)),
+          )
+        )
+      ),
+      '#wrapper_attributes' => array('class' => array('clicker'))
+    );
+  $form['#attached'] = array(
+    'library' => array(
+      array('system', 'backdrop.ajax'),
+      array('system', 'backdrop.dialog'),
+    ),
+  );
+
+  return backdrop_render($form);
+}
+function tour_builder_output_form($form, &$form_state) {
+  $form['tour_stop'] = array(
+    '#title' => t('Tour stop'),
+    '#type' => 'item',
+    '#id' => 'tour-stop',
+  );
+  $form['messages'] = array(
+/*     '#theme' => 'status_messages',
+    '#weight' => -100,
+    // Prefix/suffix used to identify in AJAX requests.
+    '#prefix' => '<div id="layout-messages">',
+    '#suffix' => '</div>',
+ */  );
+  if (!isset($form_state['tour_storage'])) {
+    $form['tour_stop']['tour_title'] = array(
+      '#type' => 'textfield',
+      '#required' => TRUE,
+      '#title' => t('Tour title'),
+    );
+    $form['tour_stop']['tour_description'] = array(
+      '#type' => 'textarea',
+      '#rows' => 2,
+      '#title' => t('Tour description'),
+    );
+    $form['actions'] = array(
+      '#type' => 'actions',
+    );
+    $form['actions']['start'] = array(
+      '#type' => 'submit',
+      '#value' => t('Start tour builder'),
+      '#submit' => array('tour_builder_start'),
+      '#ajax' => array(
+        'callback' => 'tour_builder_start_ajax',
+      ),
+    );
+  }
+  else {
+    $stop_array = !empty($form_state['stops']) ? $form_state['stops'] : array();
+
+    foreach ($stop_array as $stop) {
+      $stop_list[] = $stop['tour_stop_title'];
+    }
+
+    $form['tour_stop'] = array(
+      '#title' => t('Tour stop'),
+      '#type' => 'item',
+      '#id' => 'tour-stop',
+    );
+    $form['tour_stop']['tour_stop_title'] = array(
+      '#type' => 'textfield',
+      '#required' => TRUE,
+      '#title' => t('Stop label'),
+    );
+    $form['tour_stop']['tour_stop_css'] = array(
+      '#type' => 'textarea',
+      '#rows' => 2,
+      '#title' => t('Stop CSS identifier'),
+      '#required' => TRUE,
+    );
+    dpm($form_state['stops']);
+    $form['tour_stop']['tour_stop_list'] = array(
+      '#type' => 'item',
+      '#markup' => theme('item_list', array('items' => $stop_list)),
+      '#title' => t('Stops saved'),
+    );
+    $form['actions'] = array(
+      '#type' => 'actions',
+    );
+    $form['actions']['save_stop'] = array(
+      '#type' => 'submit',
+      '#value' => t('Save tour stop'),
+      '#submit' => array('tour_builder_save_stop'),
+      '#ajax' => array(
+        'callback' => 'tour_builder_save_stop_ajax',
+      ),
+    );
+    $form['actions']['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Finish'),
+      '#submit' => array('tour_builder_save_finish'),
+      '#ajax' => array(
+        'callback' => 'tour_builder_save_finish_ajax',
+      ),
+    );
+  }
+
+  return $form;
+}
+
+
+/**
+ * AJAX handler that saves a stop.
+ */
+function tour_builder_start($form, &$form_state) {
+  module_load_include('inc', 'system', 'system.admin');
+  $tour_name = system_transliterate_machine_name(strtolower($form_state['values']['tour_title']), array());
+  // $tour_name = 'foo';
+
+  $config = config('tour.tour.' . $tour_name);
+  $config->set('name', $tour_name);
+  $config->set('title', $form_state['values']['tour_title']);
+  $config->set('description', $form_state['values']['tour_description']);
+  $config->save();
+  $form_state['tour_storage'] = $tour_name;
+  $form_state['rebuild'] = TRUE;
+}
+
+/**
+ * AJAX handler that saves a stop.
+ */
+function tour_builder_save_finish($form, $form_state) {
+  $tour = config_get('tour.tour.' . $form_state['tour_storage']);
+  dpm($tour);
+}
+
+/**
+ * AJAX handler that saves a stop.
+ */
+function tour_builder_save_finish_ajax($form, $form_state) {
+  $commands = array();
+  $commands[] = ajax_command_close_dialog('#tour-edit-dialog');
+
+  $return = array(
+    '#type' => 'ajax',
+    '#commands' => $commands,
+  );
+  return $return;
+}
+
+/**
+ * AJAX handler that saves a stop.
+ */
+function tour_builder_save_stop($form, &$form_state) {
+  form_state_values_clean($form_state);
+  $config = config('tour.tour.' . $form_state['tour_storage']);
+  $stops = $config->get('stops');
+  $stops[] = $form_state['values'];
+  $config->set('stops', $stops);
+  $config->save();
+  $form_state['rebuild'] = TRUE;
+  $form_state['stops'] = $stops;
+}
+
+/**
+ * AJAX handler that saves a stop.
+ */
+function tour_builder_save_stop_ajax($form, $form_state) {
+  // $commands[] = ajax_command_remove('.l-messages');
+    //$commands[] = ajax_command_invoke('input[name="tour_stop_title"]l', 'val', array());
+  $form['tour_stop']['tour_stop_title']['#value'] = '';
+  $form['tour_stop']['tour_stop_css']['#value'] = '';
+  $commands[] = ajax_command_html('#tour-stop', backdrop_render($form['tour_stop']));
+  return array(
+    '#type' => 'ajax',
+    '#commands' => $commands,
+  );
+}
+
+
+/**
+ * AJAX handler that saves a stop.
+ */
+function tour_builder_start_ajax($form, $form_state) {
+  // $commands[] = ajax_command_remove('.l-messages');
+  // $commands[] = ajax_command_html('#layout-messages', theme('status_messages'));
+  $commands[] = ajax_command_html('#tour-edit-dialog', backdrop_render($form));
+  return array(
+    '#type' => 'ajax',
+    '#commands' => $commands,
+  );
+}
+
