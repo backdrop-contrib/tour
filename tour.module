@@ -78,8 +78,8 @@ function tour_add_tours($active_tours) {
         // 'tip-' . Html::getClass($tip->id()),
       ];
 
-      $selector = $tip['tour_stop_css'];
-      $location = 'bottom'; // $tip['tour_stop_css'];
+      $selector = $tip['selector'];
+      $location = 'top'; // $tip['selector'];
 
       $output = [
         'text' => $tip['text'],

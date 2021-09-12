@@ -11,14 +11,14 @@ function tour_ui_menu() {
   $items = array();
 
   $items['admin/config/user-interface/tour'] = array(
-    'title' => 'tour',
+    'title' => 'Tour',
     'page callback' => 'tour_ui_list_tour_tours',
     'access arguments' => array('access administration pages'),
     'type' => MENU_NORMAL_ITEM,
   );
 
   $items['admin/config/user-interface/tour/ui'] = array(
-    'title' => 'tour UI',
+    'title' => 'Tour UI',
     'access arguments' => array('access administration pages'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
@@ -31,7 +31,7 @@ function tour_ui_menu() {
 	);  
   
   $items['admin/config/user-interface/tour/ui/%tour_ui_tempstore'] = array(
-    'title' => 'tour Editor',
+    'title' => 'Tour Editor',
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('tour_ui_edit_tour', 5),
     'access arguments' => array('access administration pages'),
@@ -48,7 +48,7 @@ function tour_ui_menu() {
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('tour_ui_edit_step', 5, 7),
     'access arguments' => array('access administration pages'),
-    'type' => MENU_LOCAL_ACTION,
+    'type' => MENU_CALLBACK,
   );
   $items['admin/config/user-interface/tour/ui/%tour_ui_tempstore/step/%/delete'] = array(
     'title' => 'Delete step',
@@ -59,11 +59,11 @@ function tour_ui_menu() {
     'type' => MENU_CALLBACK,
   );
   $items['admin/config/user-interface/tour/ui/%tour_ui_tempstore/step/add'] = array(
-    'title' => 'Edit step',
+    'title' => 'Add step',
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('tour_ui_edit_step', 5, 7),
     'access arguments' => array('access administration pages'),
-    'type' => MENU_LOCAL_ACTION,
+    'type' => MENU_CALLBACK,
   );
   
   $items['admin/config/user-interface/tour/demo'] = array(
@@ -539,9 +539,7 @@ function _rebuild_step_options($optionals) {
  * @ingroup themeable
  */
 function theme_tour_ui_edit_tour_table($variables) {
-  dpm($variables);
   $form = $variables['form'];
-  // $tour = $form_state['tour'];
 
   $rows = array();
   $output = '';

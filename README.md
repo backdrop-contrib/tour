@@ -55,7 +55,7 @@ navigating to the
 
 Tour content(steps) may have the following values:
 - id: The unique ID for the step.
-- tour_stop_css: The CSS ID target for the step.
+- selector: The CSS ID target for the step.
 - title: The header for the popup tip.
 - text: The body of the popup tip. 
 - placement: where the bubble should appear in relation to the target.
