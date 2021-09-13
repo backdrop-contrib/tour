@@ -58,6 +58,7 @@ function tour_builder_output() {
 
   // Check the token against the serialized options to prevent random access to
   // the token browser page.
+  // @todo: add this back.
   if (!isset($_GET['token']) || !backdrop_valid_token($_GET['token'], 'token-tree:' . serialize($options))) {
    // return MENU_ACCESS_DENIED;
   }
@@ -75,7 +76,7 @@ function tour_builder_output() {
     'width' => '600',
     'height' => '500',
   );
-  $commands = array(ajax_command_open_dialog('#tour-edit-dialog', t('Available tokens'), $tree, $dialog_options));
+  $commands = array(ajax_command_open_dialog('#tour-edit-dialog', t('Tour builder'), $tree, $dialog_options));
   $return = array(
     '#type' => 'ajax',
     '#commands' => $commands,
@@ -86,11 +87,6 @@ function tour_builder_output() {
 function tour_builder_output_form($form, &$form_state) {
   backdrop_add_library('tour_builder', 'tour-builder');
 
-  $form['tour_stop'] = array(
-    '#title' => t('Tour stop'),
-    '#type' => 'item',
-    '#id' => 'tour-stop',
-  );
   $form['messages'] = array(
     '#theme' => 'status_messages',
     '#weight' => -100,
@@ -98,19 +94,19 @@ function tour_builder_output_form($form, &$form_state) {
     '#suffix' => '</div>',
   );
   if (!isset($form_state['tour_storage'])) {
-    $form['tour_stop']['tour_title'] = array(
+    $form['tour_title'] = array(
       '#type' => 'textfield',
       '#required' => TRUE,
       '#title' => t('Tour title'),
     );
-    $form['tour_stop']['tour_description'] = array(
+    $form['tour_description'] = array(
       '#type' => 'textarea',
       '#rows' => 2,
       '#title' => t('Tour description'),
     );
     $path = $_SERVER['HTTP_REFERER'];
     global $base_url;
-    $form['tour_stop']['tour_paths'] = array(
+    $form['tour_paths'] = array(
       '#type' => 'textarea',
       '#rows' => 2,
       '#title' => t('Tour paths'),
@@ -137,7 +133,6 @@ function tour_builder_output_form($form, &$form_state) {
     }
 
     $form['tour_stop'] = array(
-      '#title' => t('Tour stop'),
       '#type' => 'item',
       '#id' => 'tour-stop',
     );
