@@ -62,7 +62,8 @@ function tour_builder_output() {
    // return MENU_ACCESS_DENIED;
   }
 
-  $tree = '<div>' . backdrop_render(backdrop_get_form('tour_builder_output_form')) . '</div>';
+  $tour_builder_output_form = backdrop_get_form('tour_builder_output_form');
+  $tree = '<div>' . backdrop_render($tour_builder_output_form) . '</div>';
 
   // Return as a renderable so the Backdrop dialog system can use the title.
   $dialog_options = array(
@@ -163,6 +164,7 @@ function tour_builder_output_form($form, &$form_state) {
     $form['actions']['submit'] = array(
       '#type' => 'submit',
       '#value' => t('Finish'),
+      '#limit_validation_errors' => array(),
       '#submit' => array('tour_builder_save_finish'),
       '#ajax' => array(
         'callback' => 'tour_builder_save_finish_ajax',
@@ -182,21 +184,60 @@ function tour_builder_start($form, &$form_state) {
   $tour_name = system_transliterate_machine_name(strtolower($form_state['values']['tour_title']), array());
   // $tour_name = 'foo';
 
-  $config = config('tour.tour.' . $tour_name);
-  $config->set('name', $tour_name);
-  $config->set('title', $form_state['values']['tour_title']);
-  $config->set('description', $form_state['values']['tour_description']);
-  $config->save();
+  $form_state['tour_name'] = $tour_name;
   $form_state['tour_storage'] = $tour_name;
+  $form_state['tour_title'] = $form_state['values']['tour_title'];
+  $form_state['tour_description'] = $form_state['values']['tour_description'];
+  $form_state['stops'] = array();
   $form_state['rebuild'] = TRUE;
 }
 
 /**
  * AJAX handler that saves a stop.
  */
+function tour_builder_start_ajax($form, &$form_state) {
+  // $commands[] = ajax_command_remove('.l-messages');
+  // $commands[] = ajax_command_html('#layout-messages', theme('status_messages'));
+  $commands[] = ajax_command_html('#tour-edit-dialog', backdrop_render($form));
+  return array(
+    '#type' => 'ajax',
+    '#commands' => $commands,
+  );
+}
+
+/**
+ * AJAX handler that saves a stop.
+ */
+function tour_builder_save_stop($form, &$form_state) {
+  form_state_values_clean($form_state);
+  $form_state['stops'][] = $form_state['values'];
+  $form_state['rebuild'] = TRUE;
+}
+
+/**
+ * AJAX handler that saves a stop.
+ */
+function tour_builder_save_stop_ajax($form, $form_state) {
+  $form['tour_stop']['tour_stop_title']['#value'] = '';
+  $form['tour_stop']['tour_stop_css']['#value'] = '';
+  $commands[] = ajax_command_html('#tour-stop', backdrop_render($form['tour_stop']));
+  return array(
+    '#type' => 'ajax',
+    '#commands' => $commands,
+  );
+}
+
+
+/**
+ * AJAX handler that saves a stop.
+ */
 function tour_builder_save_finish($form, $form_state) {
-  $tour = config_get('tour.tour.' . $form_state['tour_storage']);
-  dpm($tour);
+  $config = config('tour.tour.' . $form_state['tour_name']);
+  $config->set('name', $form_state['tour_name']);
+  $config->set('title', $form_state['tour_title']);
+  $config->set('description', $form_state['tour_description']);
+  $config->set('stops', $form_state['stops']);
+  $config->save();
 }
 
 /**
@@ -213,48 +254,6 @@ function tour_builder_save_finish_ajax($form, $form_state) {
   return $return;
 }
 
-/**
- * AJAX handler that saves a stop.
- */
-function tour_builder_save_stop($form, &$form_state) {
-  form_state_values_clean($form_state);
-  $config = config('tour.tour.' . $form_state['tour_storage']);
-  $stops = $config->get('stops');
-  $stops[] = $form_state['values'];
-  $config->set('stops', $stops);
-  $config->save();
-  $form_state['rebuild'] = TRUE;
-  $form_state['stops'] = $stops;
-}
-
-/**
- * AJAX handler that saves a stop.
- */
-function tour_builder_save_stop_ajax($form, $form_state) {
-  // $commands[] = ajax_command_remove('.l-messages');
-    //$commands[] = ajax_command_invoke('input[name="tour_stop_title"]l', 'val', array());
-  $form['tour_stop']['tour_stop_title']['#value'] = '';
-  $form['tour_stop']['tour_stop_css']['#value'] = '';
-  $commands[] = ajax_command_html('#tour-stop', backdrop_render($form['tour_stop']));
-  return array(
-    '#type' => 'ajax',
-    '#commands' => $commands,
-  );
-}
-
-
-/**
- * AJAX handler that saves a stop.
- */
-function tour_builder_start_ajax($form, $form_state) {
-  // $commands[] = ajax_command_remove('.l-messages');
-  // $commands[] = ajax_command_html('#layout-messages', theme('status_messages'));
-  $commands[] = ajax_command_html('#tour-edit-dialog', backdrop_render($form));
-  return array(
-    '#type' => 'ajax',
-    '#commands' => $commands,
-  );
-}
 
 /**
  * Implements hook_block_info().
