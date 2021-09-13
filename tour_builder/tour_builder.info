@@ -3,5 +3,4 @@ description = Build site tours.
 backdrop = 1.x
 type = module
 
-;scripts[] = js/jquery-getpath.js
-;stylesheets[all][] = css/tour_builder.css
+dependencies[] = tour_ui

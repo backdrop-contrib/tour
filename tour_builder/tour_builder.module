@@ -92,12 +92,11 @@ function tour_builder_output_form($form, &$form_state) {
     '#id' => 'tour-stop',
   );
   $form['messages'] = array(
-/*     '#theme' => 'status_messages',
+    '#theme' => 'status_messages',
     '#weight' => -100,
-    // Prefix/suffix used to identify in AJAX requests.
     '#prefix' => '<div id="layout-messages">',
     '#suffix' => '</div>',
- */  );
+  );
   if (!isset($form_state['tour_storage'])) {
     $form['tour_stop']['tour_title'] = array(
       '#type' => 'textfield',
@@ -109,12 +108,14 @@ function tour_builder_output_form($form, &$form_state) {
       '#rows' => 2,
       '#title' => t('Tour description'),
     );
+    $path = $_SERVER['HTTP_REFERER'];
+    global $base_url;
     $form['tour_stop']['tour_paths'] = array(
       '#type' => 'textarea',
       '#rows' => 2,
       '#title' => t('Tour paths'),
       '#description' => t('Enter one path per line.'),
-      '#default_value' => request_path(),
+      '#default_value' => str_replace($base_url . base_path(), '', $path),
     );
     $form['actions'] = array(
       '#type' => 'actions',
@@ -157,7 +158,6 @@ function tour_builder_output_form($form, &$form_state) {
       '#title' => t('Stop CSS identifier'),
       '#required' => TRUE,
     );
-    dpm($form_state['stops']);
     $form['tour_stop']['tour_stop_list'] = array(
       '#type' => 'item',
       '#markup' => theme('item_list', array('items' => $stop_list)),
@@ -195,7 +195,6 @@ function tour_builder_output_form($form, &$form_state) {
 function tour_builder_start($form, &$form_state) {
   module_load_include('inc', 'system', 'system.admin');
   $tour_name = system_transliterate_machine_name(strtolower($form_state['values']['tour_title']), array());
-  // $tour_name = 'foo';
 
   $form_state['tour_name'] = $tour_name;
   $form_state['tour_storage'] = $tour_name;
@@ -210,8 +209,6 @@ function tour_builder_start($form, &$form_state) {
  * AJAX handler that saves a stop.
  */
 function tour_builder_start_ajax($form, &$form_state) {
-  // $commands[] = ajax_command_remove('.l-messages');
-  // $commands[] = ajax_command_html('#layout-messages', theme('status_messages'));
   $commands[] = ajax_command_html('#tour-edit-dialog', backdrop_render($form));
   return array(
     '#type' => 'ajax',
@@ -227,7 +224,6 @@ function tour_builder_save_stop($form, &$form_state) {
   module_load_include('inc', 'system', 'system.admin');
   $machine_name = system_transliterate_machine_name(strtolower($form_state['values']['title']), array());
   $id = tour_step_unique_id($form_state['stops'], $machine_name);
-  dpm($id);
   $form_state['values']['id'] = $id;
   $form_state['stops'][] = $form_state['values'];
   $form_state['rebuild'] = TRUE;
@@ -247,7 +243,6 @@ function tour_builder_save_stop_ajax($form, $form_state) {
   );
 }
 
-
 /**
  * AJAX handler that saves a stop.
  */
@@ -262,6 +257,7 @@ function tour_builder_save_finish($form, $form_state) {
   $config->set('enabled', 1);
   $config->set('steps', $form_state['stops']);
   $config->save();
+  cache_flush('cache');
 }
 
 /**
@@ -270,6 +266,7 @@ function tour_builder_save_finish($form, $form_state) {
 function tour_builder_save_finish_ajax($form, $form_state) {
   $commands = array();
   $commands[] = ajax_command_close_dialog('#tour-edit-dialog');
+  $commands[] = ajax_command_redirect('admin/config/user-interface/tour');
 
   $return = array(
     '#type' => 'ajax',
@@ -310,22 +307,19 @@ function tour_builder_block_view($delta = '') {
  * Implements hook_autoload_info().
  */
 function tour_builder_link() {
-  // backdrop_add_js(backdrop_get_path('module', 'tour_builder') . '/js/tour_builder.js');
-    $form['block_list'] = array(
-      '#type' => 'item',
-      '#markup' => l(
-        t('Click me!'),
-        'tour-builder-ajax',
-        array(
-          'attributes' => array(
-            'class' => array('use-ajax tour-edit-link'),
-            // 'data-dialog' => TRUE,
-            // 'data-dialog-options' => json_encode(array('width' => 200, 'maxWidth' => 200, 'modal' => false)),
-          )
+  $form['block_list'] = array(
+    '#type' => 'item',
+    '#markup' => l(
+      t('Click me!'),
+      'tour-builder-ajax',
+      array(
+        'attributes' => array(
+          'class' => array('use-ajax tour-edit-link'),
         )
-      ),
-      '#wrapper_attributes' => array('class' => array('clicker'))
-    );
+      )
+    ),
+    '#wrapper_attributes' => array('class' => array('clicker'))
+  );
   $form['#attached'] = array(
     'library' => array(
       array('system', 'backdrop.ajax'),

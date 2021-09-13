@@ -1,24 +1,6 @@
-/* global Backdrop */
-(function ($) { // Avoid leaking variables
+(function ($) {
   Backdrop.behaviors.tour_builder = {
     attach: function (context, settings) {
-      // $(document).on('mouseover', function(e) {
-        // targetElement = $(e.target);
-          // if (targetElement.attr('id')) {
-            // var targetCSS = targetElement.attr('id');
-          // }
-          // else {
-            // var targetCSS = targetElement.getPath();
-          // }
-          // console.log(targetCSS);
-        // targetElement.addClass( "elborder" ).on('click', function() {
-          // console.log(targetElement.getPath());
-        // });
-      // });
-      // $(document).on('mouseout', function(e) {
-        // targetElement = $(e.target);
-        // targetElement.removeClass( "elborder" );
-      // });
       var targetElement;
       var targetCSS;
       $(document).on({
@@ -36,27 +18,21 @@
             }
           },
           mouseout: function (e) {
-            //targetElement = $(e.target);
             targetElement.removeClass( "elborder" );
           },
           click: function (e) {
             if (validElement()) {
               e.preventDefault();
               targetElement.removeClass( "elborder" );
-              //targetElement = $(e.target);
               $('input[name="title"]').val(getElementTitle()); 
               $('textarea[name="selector"]').val(targetCSS); 
               $('textarea[name="text"]').val(getElementTitle()); 
-              //$('#edit-tour-stop-css').val(targetCSS); 
             }
-
-              //stuff to do on mouse leave
           }
       });
 
       function validElement () {
         if (
-            // targetElement.hasClass('tour-edit-link') && 
             targetElement.parents('#admin-bar').length ||
             targetElement.parents('.tour-edit-dialog').length
         ) {

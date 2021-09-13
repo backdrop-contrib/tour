@@ -1,7 +1,5 @@
 <?php
 
-// add enabled to defaults
-
 /**
  * Implements hook_menu().
  *
@@ -172,7 +170,6 @@ function tour_ui_disable_tour_submit($form, &$form_state) {
  *
  */
 function tour_ui_edit_tour($form, &$form_state, $tour = 'add') {
-  dpm($tour);
   backdrop_add_css(backdrop_get_path('module', 'tour_ui') . '/css/tour.admin.css');
 
   $form['#tree'] = TRUE;
@@ -229,10 +226,6 @@ function tour_ui_edit_tour($form, &$form_state, $tour = 'add') {
   }
   $form_state['tour'] = $tour;
   
-  // $form['name'] = array(
-    // '#type' => 'value',
-    // '#value' => $name,
-  // );
   $form['paths'] = array(
     '#type' => 'textarea',
     '#title' => t('Paths'),
@@ -286,11 +279,9 @@ function tour_ui_edit_tour($form, &$form_state, $tour = 'add') {
     '#theme' => 'tour_ui_edit_tour_table',
     '#attributes' => array('class' => array('tour-table')),
   );
-  //if (empty($form_state['content'])) {
-    if(!$form_state['is_new']) {
-      $form_state['content'] = $tour['steps'];
-    }
-  //}
+  if(!$form_state['is_new']) {
+    $form_state['content'] = $tour['steps'];
+  }
   if(!empty($tour) && !$form_state['is_new']) {
     foreach ($form_state['content'] as $i => $step) {
       
@@ -384,45 +375,6 @@ function tour_ui_edit_tour_validate($form, &$form_state) {
     }
   }
   $form_state['values']['paths'] = $paths;
-/*   
-  if(is_null($form_state['values']['content']) || (count($form_state['values']['content']) == 1 && $form_state['values']['content'][0]['delete'] == 1)) {
-    form_set_error('form', 'No steps to save');
-  }
-  foreach($form_state['values']['content'] as $key => $content) {
-    // Validate the optional settings textarea. Settings are input as one 
-    // key:value pair per line. We need to separate each line, then convert the 
-    // key:value string into array key and value.
-    
-    // First split the lines.
-    $optionals = tour_ui_format_lines($form_state['values']['content'][$key]['optional']);
-    $options = array();
-    // If we got some lines, now split the pairs, using ":" as the delimiter
-    if($optionals) {
-      foreach($optionals as $option) {
-        $split = explode(":", $option, 2);
-        if(isset( $split[1])) {
-          $options[$split[0]] = $split[1];
-        }
-        else {
-          // If the split didnt return a value then the delimiter was missing,
-          // or something else equally tragic. We bail out here.
-          form_set_error('optional', 'One or more of your optional settings are invalid.');
-        }
-      }
-    }
-    $form_state['values']['content'][$key]['optional'] = $options;
-    
-    if(!$content['content'] && !$content['title']) {
-      form_set_error('content', 'Steps must have a content or a title or both.');
-    }
-
-    if($content['delete']) {
-      unset($form_state['values']['content'][$key]);
-    }
-
-    unset($form_state['values']['content'][$key]['delete']);
-  }
- */  
 }
 
 
@@ -437,11 +389,7 @@ function tour_ui_edit_tour_submit($form, &$form_state) {
   $index = $form_state['step_index'];
 
   $name = $form_state['values']['name'];
-  // unset($form_state['values']['name']);
-  // backdrop_sort($form_state['values']['content'], array('weight' => SORT_NUMERIC));
-  // $form_state['values']['content'] = array_values($form_state['values']['content']);
   $data = $form_state['values'];
-  dpm($data);
   
   $config = config('tour.tour.' . $name);
   foreach ($form_state['values'] as $key => $value) {
@@ -757,42 +705,6 @@ function tour_ui_step_ajax_dialog_submit($form, $form_state) {
   );
 }
 
-
-/**
- * Returns HTML for a single step in the tour edit form.
- *
- * @param $variables
- *   An associative array containing:
- *   - form: A render element representing the form.
- *
- * @ingroup themeable
- */
-function theme_tour_content_row($content) {
-    // $row['title'] = backdrop_render($content['title']);
-    // $row['content'] = backdrop_render($content['content']);
-    // $row['target'] = backdrop_render($content['target']);
-    // $row['placement'] = backdrop_render($content['placement']);
-    // $rows = array($row);
-
-    // if (!empty($rows)) {
-    // $header = array();
-    // $output = theme('table', array('header' => $header, 'rows' => $rows));
-    
-    // $attributes = backdrop_render($content['optional']);
-    
-    // backdrop_add_js(backdrop_get_path('module', 'tour_ui') . '/tour_ui.js');
-    // $toggle = ' <a class="requirements-toggle" href="#">' . t('more') . '</a>';
-    // $details = '<div class="text table-filter-text-source"> ' . $toggle . '</div>' . '<div class="requirements">' . $attributes . '</div>';
-
-    // $output .= $details;
-    // return $output;
-  // }
-  // else {
-    //return t('There are no items in the queue.');
-  //}
-  return backdrop_render($content['title']);
-}
-
 function tour_ui_max_weight($content) {
   $weights = array();
   foreach($content as $step) {
@@ -800,12 +712,14 @@ function tour_ui_max_weight($content) {
   }
   return max($weights);
 }
+
 function tour_ui_get_default_step($max_weight = 0) {
   return array (
     'title' => t('Stop') . '#: ' . ($max_weight + 2),
     'content' => '',
     'target' => '',
     'placement' => '',
+    'enabled' => 1,
     'optional' => '',
     'weight' => $max_weight + 1,
   );

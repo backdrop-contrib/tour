@@ -73,9 +73,7 @@ function tour_add_tours($active_tours) {
     }
     foreach ($tour['steps'] as $index => $tip) {
       $classes = [
-        // 'tip-module-' . Html::getClass($tourEntity->getModule()),
-        // 'tip-type-' . Html::getClass($tip->getPluginId()),
-        // 'tip-' . Html::getClass($tip->id()),
+        'tip-' . $tip['id'],
       ];
 
       $selector = $tip['selector'];
