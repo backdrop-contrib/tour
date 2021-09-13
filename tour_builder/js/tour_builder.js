@@ -56,7 +56,7 @@
       function validElement () {
         if (
             // targetElement.hasClass('tour-edit-link') && 
-            targetElement.parents('#admin-bar').length &&
+            targetElement.parents('#admin-bar').length ||
             targetElement.parents('.tour-edit-dialog').length
         ) {
           return false;
