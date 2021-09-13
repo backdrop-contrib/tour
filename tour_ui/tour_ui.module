@@ -607,13 +607,13 @@ function tour_ui_edit_step($form, &$form_state, $tour, $step_name = 'add') {
     '#title' => t('Tip content'),
     '#rows' => 2,
     '#required' => TRUE,
-    '#default_value' => isset($step['content']) ? $step['content'] : '',
+    '#default_value' => isset($step['text']) ? $step['text'] : '',
   );
   $form['target'] = array(
     '#type' => 'textfield',
     '#required' => TRUE,
     '#title' => t('Target'),
-    '#default_value' => isset($step['target']) ? $step['target'] : '',
+    '#default_value' => isset($step['selector']) ? $step['selector'] : '',
   );
 
   $form['actions'] = array('#type' => 'actions');
