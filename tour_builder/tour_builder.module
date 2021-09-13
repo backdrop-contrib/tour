@@ -138,6 +138,12 @@ function tour_builder_output_form($form, &$form_state) {
       '#required' => TRUE,
       '#title' => t('Stop label'),
     );
+    $form['tour_stop']['text'] = array(
+      '#type' => 'textarea',
+      '#rows' => 2,
+      '#required' => TRUE,
+      '#title' => t('Stop label'),
+    );
     $form['tour_stop']['selector'] = array(
       '#type' => 'textarea',
       '#rows' => 2,
@@ -224,6 +230,7 @@ function tour_builder_save_stop($form, &$form_state) {
  */
 function tour_builder_save_stop_ajax($form, $form_state) {
   $form['tour_stop']['title']['#value'] = '';
+  $form['tour_stop']['text']['#value'] = '';
   $form['tour_stop']['selector']['#value'] = '';
   $commands[] = ajax_command_html('#tour-stop', backdrop_render($form['tour_stop']));
   return array(

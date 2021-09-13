@@ -46,6 +46,7 @@
               //targetElement = $(e.target);
               $('input[name="title"]').val(getElementTitle()); 
               $('textarea[name="selector"]').val(targetCSS); 
+              $('textarea[name="text"]').val(getElementTitle()); 
               //$('#edit-tour-stop-css').val(targetCSS); 
             }
 
