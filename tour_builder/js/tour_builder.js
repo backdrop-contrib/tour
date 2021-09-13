@@ -54,13 +54,14 @@
       });
 
       function validElement () {
-        if (!targetElement.hasClass('tour-edit-link') && 
-            !targetElement.parents('#admin-bar').length &&
-            !targetElement.parents('.tour-edit-dialog').length
+        if (
+            // targetElement.hasClass('tour-edit-link') && 
+            targetElement.parents('#admin-bar').length &&
+            targetElement.parents('.tour-edit-dialog').length
         ) {
-          return true;
+          return false;
         }
-        return false;
+        return true;
       }
 
       function getElementTitle () {

@@ -5,11 +5,11 @@
 * Implements hook_menu().
 */
 function tour_builder_menu() {
-  $items['tour-builder'] = array(
-  'title' => 'tour_builder form',
-  'page callback' => 'tour_builder_form',
-  'access callback' => TRUE,
-  'type' => MENU_CALLBACK,
+  $items['tour-builder-link'] = array(
+    'title' => 'tour_builder form',
+    'page callback' => 'tour_builder_link',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
   );
   $items['tour-builder-ajax'] = array(
     'page callback' => 'tour_builder_output',
@@ -19,6 +19,39 @@ function tour_builder_menu() {
   );
   return $items;
 }
+
+
+/**
+ * Implements hook_library_info().
+ */
+function tour_builder_library_info() {
+  $libraries['jquery-getpath'] = array(
+    'title' => 'JQuery GetPath',
+    'website' => 'https://github.com/yamadapc/jquery-getpath',
+    'version' => '0.0.0',
+    'js' => array(
+      backdrop_get_path('module', 'tour_builder') . '/js/jquery-getpath.js' => array(),
+    ),
+  );
+  $libraries['tour-builder'] = array(
+    'title' => 'Tour builder',
+    'version' => '1.0.0',
+    'js' => array(
+      backdrop_get_path('module', 'tour_builder') . '/js/tour_builder.js' => array(),
+    ),
+    'css' => array(
+      backdrop_get_path('module', 'tour_builder') . '/css/tour_builder.css' => array(
+        'type' => 'file',
+        'media' => 'screen',
+      ),
+    ),
+    'dependencies' => array(
+      array('tour_builder', 'jquery-getpath'),
+    ),
+  );
+  return $libraries;
+}
+
 
 function tour_builder_output() {
   $options = isset($_GET['options']) ? backdrop_json_decode($_GET['options']) : array();
@@ -48,36 +81,10 @@ function tour_builder_output() {
   );
   return $return;
 }
-/**
- * Implements hook_autoload_info().
- */
-function tour_builder_form() {
-  // backdrop_add_js(backdrop_get_path('module', 'tour_builder') . '/js/tour_builder.js');
-    $form['block_list'] = array(
-      '#type' => 'item',
-      '#markup' => l(
-        t('Click me!'),
-        'tour-builder-ajax',
-        array(
-          'attributes' => array(
-            'class' => array('use-ajax tour-edit-link'),
-            // 'data-dialog' => TRUE,
-            // 'data-dialog-options' => json_encode(array('width' => 200, 'maxWidth' => 200, 'modal' => false)),
-          )
-        )
-      ),
-      '#wrapper_attributes' => array('class' => array('clicker'))
-    );
-  $form['#attached'] = array(
-    'library' => array(
-      array('system', 'backdrop.ajax'),
-      array('system', 'backdrop.dialog'),
-    ),
-  );
 
-  return backdrop_render($form);
-}
 function tour_builder_output_form($form, &$form_state) {
+  backdrop_add_library('tour_builder', 'tour-builder');
+
   $form['tour_stop'] = array(
     '#title' => t('Tour stop'),
     '#type' => 'item',
@@ -249,3 +256,59 @@ function tour_builder_start_ajax($form, $form_state) {
   );
 }
 
+/**
+ * Implements hook_block_info().
+ */
+function tour_builder_block_info() {
+  $blocks['tour_builder_start_link'] = array(
+    'info' => t('Tour builder'),
+    'description' => t('Launch tour builder.')
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function tour_builder_block_view($delta = '') {
+  $block = array();
+
+  switch ($delta) {
+    case 'tour_builder_start_link':
+      $block['subject'] = 'Available tours';
+      $block['content'] = tour_builder_link();
+      break;
+  }
+  return $block;
+}
+
+/**
+ * Implements hook_autoload_info().
+ */
+function tour_builder_link() {
+  // backdrop_add_js(backdrop_get_path('module', 'tour_builder') . '/js/tour_builder.js');
+    $form['block_list'] = array(
+      '#type' => 'item',
+      '#markup' => l(
+        t('Click me!'),
+        'tour-builder-ajax',
+        array(
+          'attributes' => array(
+            'class' => array('use-ajax tour-edit-link'),
+            // 'data-dialog' => TRUE,
+            // 'data-dialog-options' => json_encode(array('width' => 200, 'maxWidth' => 200, 'modal' => false)),
+          )
+        )
+      ),
+      '#wrapper_attributes' => array('class' => array('clicker'))
+    );
+  $form['#attached'] = array(
+    'library' => array(
+      array('system', 'backdrop.ajax'),
+      array('system', 'backdrop.dialog'),
+    ),
+  );
+
+  return backdrop_render($form);
+}
