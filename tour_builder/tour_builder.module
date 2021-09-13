@@ -109,6 +109,13 @@ function tour_builder_output_form($form, &$form_state) {
       '#rows' => 2,
       '#title' => t('Tour description'),
     );
+    $form['tour_stop']['tour_paths'] = array(
+      '#type' => 'textarea',
+      '#rows' => 2,
+      '#title' => t('Tour paths'),
+      '#description' => t('Enter one path per line.'),
+      '#default_value' => request_path(),
+    );
     $form['actions'] = array(
       '#type' => 'actions',
     );
@@ -194,6 +201,7 @@ function tour_builder_start($form, &$form_state) {
   $form_state['tour_storage'] = $tour_name;
   $form_state['tour_title'] = $form_state['values']['tour_title'];
   $form_state['tour_description'] = $form_state['values']['tour_description'];
+  $form_state['tour_paths'] = $form_state['values']['tour_paths'];
   $form_state['stops'] = array();
   $form_state['rebuild'] = TRUE;
 }
@@ -247,8 +255,12 @@ function tour_builder_save_finish($form, $form_state) {
   $config = config('tour.tour.' . $form_state['tour_name']);
   $config->set('name', $form_state['tour_name']);
   $config->set('title', $form_state['tour_title']);
+  $config->set('paths', tour_ui_format_lines($form_state['tour_paths']));
   $config->set('description', $form_state['tour_description']);
-  $config->set('stops', $form_state['stops']);
+  $config->set('editable', 1);
+  $config->set('auto_start', 0);
+  $config->set('enabled', 1);
+  $config->set('steps', $form_state['stops']);
   $config->save();
 }
 
