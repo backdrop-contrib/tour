@@ -265,3 +265,20 @@ function tour_block_view_build() {
   }
   return '';
 }
+
+/**
+ * Utility function that returns a unique id..
+ */
+function tour_step_unique_id($steps, $id) {
+  static $num = 1;
+  $found = FALSE;
+  foreach ($steps as $step) {
+    if ($step['id'] == $id) {
+      $id = $id . $num;
+      $num++;
+      $found = TRUE;
+      break;
+    }
+  }
+  return $found ? tour_step_unique_id($steps, $id) : $id;
+}
