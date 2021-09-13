@@ -44,8 +44,8 @@
               e.preventDefault();
               targetElement.removeClass( "elborder" );
               //targetElement = $(e.target);
-              $('input[name="tour_stop_title"]').val(getElementTitle()); 
-              $('textarea[name="tour_stop_css"]').val(targetCSS); 
+              $('input[name="title"]').val(getElementTitle()); 
+              $('textarea[name="selector"]').val(targetCSS); 
               //$('#edit-tour-stop-css').val(targetCSS); 
             }
 

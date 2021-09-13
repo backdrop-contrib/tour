@@ -125,7 +125,7 @@ function tour_builder_output_form($form, &$form_state) {
     $stop_array = !empty($form_state['stops']) ? $form_state['stops'] : array();
 
     foreach ($stop_array as $stop) {
-      $stop_list[] = $stop['tour_stop_title'];
+      $stop_list[] = $stop['title'];
     }
 
     $form['tour_stop'] = array(
@@ -133,12 +133,12 @@ function tour_builder_output_form($form, &$form_state) {
       '#type' => 'item',
       '#id' => 'tour-stop',
     );
-    $form['tour_stop']['tour_stop_title'] = array(
+    $form['tour_stop']['title'] = array(
       '#type' => 'textfield',
       '#required' => TRUE,
       '#title' => t('Stop label'),
     );
-    $form['tour_stop']['tour_stop_css'] = array(
+    $form['tour_stop']['selector'] = array(
       '#type' => 'textarea',
       '#rows' => 2,
       '#title' => t('Stop CSS identifier'),
@@ -218,8 +218,8 @@ function tour_builder_save_stop($form, &$form_state) {
  * AJAX handler that saves a stop.
  */
 function tour_builder_save_stop_ajax($form, $form_state) {
-  $form['tour_stop']['tour_stop_title']['#value'] = '';
-  $form['tour_stop']['tour_stop_css']['#value'] = '';
+  $form['tour_stop']['title']['#value'] = '';
+  $form['tour_stop']['selector']['#value'] = '';
   $commands[] = ajax_command_html('#tour-stop', backdrop_render($form['tour_stop']));
   return array(
     '#type' => 'ajax',
