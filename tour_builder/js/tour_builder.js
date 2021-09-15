@@ -6,6 +6,7 @@
       $(document).on({
           mouseover: function (e) {
             if(!Backdrop.settings.tourBuilding) return false;
+            e.stopImmediatePropagation();
             targetElement = $(e.target);
               if (targetElement.attr('id')) {
                 targetCSS = targetElement.attr('id');
@@ -22,12 +23,14 @@
           },
           mouseout: function (e) {
             if (validElement()) {
+              e.stopImmediatePropagation();
               targetElement.removeClass( "elborder" );
             }
           },
           click: function (e) {
             if (validElement()) {
               e.preventDefault();
+              e.stopImmediatePropagation();
               targetElement.removeClass( "elborder" );
               $('input[name="title"]').val(getElementTitle()); 
               $('textarea[name="selector"]').val(targetCSS); 
