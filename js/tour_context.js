@@ -3,35 +3,16 @@
     attach:function (context, settings) {
       if(!Backdrop.settings.tourContext) return false;
       var tours = Backdrop.settings.tourContext.tours;
-      console.log(Backdrop.settings);
-      // if(auto_start == 'undefined' ||auto_start == false) return false;
-
-      // var tips_content = Backdrop.settings.tourContext.tips_content || 'undefined';
-      // if(tips_content == 'undefined') return false;
-
-      // if ($('ol#tour-tips-content').length > 0) $('ol#tour-tips-content').remove();
-
-      //$('body', context).append(tips_content);
-      // tours = Backdrop.settings.tourContext.tours;
-      // $.each( tours, function( key, value ) {
-        // console.log(tours);
-        // if(value["auto_start"]) {
-        // tour.startTour(JSON.parse(value["hopper"]));
-          
-        // }
-      // });
-    //tours.forEach(function (settings, index) {
       var shepherdTours = [];
       $.each( tours, function( key, settings ) {
-        // var settings = Backdrop.settings.tourContext;
 
         var tourItems = settings._tour_internal;
         var shepherdTour = new Shepherd.Tour(settings.tourShepherdConfig);
         shepherdTour.on('cancel', function () {
-          // that.model.set('isActive', false);
+          // ;
         });
         shepherdTour.on('complete', function () {
-          //that.model.set('isActive', false);
+          // ;
         });
         var nextButton = function (shepherdTour, tourStepConfig) {
           return {
