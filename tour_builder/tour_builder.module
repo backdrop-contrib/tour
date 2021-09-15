@@ -291,7 +291,7 @@ function tour_builder_block_view($delta = '') {
 
   switch ($delta) {
     case 'tour_builder_start_link':
-      $block['subject'] = 'Available tours';
+      $block['subject'] = 'Tour builder';
       $block['content'] = tour_builder_link();
       break;
   }
