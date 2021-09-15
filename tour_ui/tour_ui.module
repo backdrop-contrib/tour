@@ -20,7 +20,7 @@ function tour_ui_menu() {
     'access arguments' => array('access administration pages'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
-	$items['admin/config/user-interface/tour/ui/%tour_ui_tempstore/disable'] = array(
+	$items['admin/config/user-interface/tour/ui/%tour/disable'] = array(
 		'title' => 'Disable tour',
 		'page callback' => 'backdrop_get_form',
 		'page arguments' => array('tour_ui_disable_tour', 5),
@@ -101,21 +101,43 @@ function tour_ui_list_tour_tours() {
   foreach ($items as $name => $item) {
     // Set variable for enabled state.
     $state = $item['enabled'] ? 'Enabled' : 'Disabled';
+    $state_change = $item['enabled'] ? 'Disable' : 'Enable';
+
+    $links = array();
+    if ($item['editable']) {
+      $links['edit'] = array(
+        'title' => t('Edit'),
+        'href' => 'admin/config/user-interface/tour/ui/' . $name,
+      );
+    }
+    $links['disable'] = array(
+      'title' => $state_change,
+      'href' => 'admin/config/user-interface/tour/ui/' . $name . '/disable',
+    );
+    $links['delete'] = array(
+      'title' => t('Delete'),
+      'href' => 'admin/structure/menu/manage/' . $machine,
+    );
+    $operations = array(
+      '#type' => 'dropbutton',
+      '#links' => $links,
+    );
     
     $row['title'] = $item['title'];
     $row['description'] = $item['description'];
     $row['auto_start'] = $item['auto_start'] ? 'TRUE' : 'FALSE';
-    $row['edit'] = (!$item['editable']) ? 'Not editable' : l('edit', 'admin/config/user-interface/tour/ui/' . $name);
-    $row['disable'] = t("!state (!url)", array('!state' => $state, '!url' => l(t('change'), 'admin/config/user-interface/tour/ui/' . $name . '/disable')));
+    $row['status'] = $state;
+    $row['operations'] = backdrop_render($operations);
     $rows[] = $row;
   }
+
   if (!empty($rows)) {
     $header = array(
       t('Title'),
       t('Description'),
       t('Autostart'),
-      t('Edit link'),
-      t('Disable'),
+      t('Status'),
+      t('Operations'),
     );
     $output = theme('table', array('header' => $header, 'rows' => $rows));
     return $output;
@@ -153,10 +175,10 @@ function tour_ui_disable_tour($form, &$form_state, $tour) {
  * clicking on cancel, the user goes back to the $path.
  */
 function tour_ui_disable_tour_submit($form, &$form_state) {
-  $tour = $form['tour']['#value'];
+  $tour = $form_state['values']['tour'];
 
   $set_enabled_status = $tour['enabled'] ? 0 : 1;
-  $config = config($tour['config_name']);
+  $config = config('tour.tour.' . $tour['name']);
   $config->set('enabled', $set_enabled_status);
   $config->save();
 
