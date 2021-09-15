@@ -5,6 +5,7 @@
       var targetCSS;
       $(document).on({
           mouseover: function (e) {
+            if(!Backdrop.settings.tourBuilding) return false;
             targetElement = $(e.target);
               if (targetElement.attr('id')) {
                 targetCSS = targetElement.attr('id');
@@ -13,12 +14,16 @@
                 targetCSS = targetElement.getPath();
               }
             if (validElement()) {
-              console.log(getElementTitle());
-            targetElement.addClass( "elborder" );
+              targetElement.addClass( "elborder" );
+            }
+            else {
+              targetElement = null;
             }
           },
           mouseout: function (e) {
-            targetElement.removeClass( "elborder" );
+            if (validElement()) {
+              targetElement.removeClass( "elborder" );
+            }
           },
           click: function (e) {
             if (validElement()) {
@@ -33,6 +38,7 @@
 
       function validElement () {
         if (
+            !targetElement ||
             targetElement.parents('#admin-bar').length ||
             targetElement.parents('.tour-edit-dialog').length
         ) {
@@ -57,6 +63,10 @@
         }
         return false;
       }
+
+      $('#tour-edit-dialog').on('dialogclose', function (e, dialog, $element) {
+        Backdrop.settings.tourBuilding = false;
+      });
 
 
     }

@@ -86,6 +86,9 @@ function tour_builder_output() {
 
 function tour_builder_output_form($form, &$form_state) {
   backdrop_add_library('tour_builder', 'tour-builder');
+  $js_settings['tourBuilding'] = TRUE;
+
+  backdrop_add_js($js_settings, 'setting');
 
   $form['messages'] = array(
     '#theme' => 'status_messages',
@@ -305,7 +308,7 @@ function tour_builder_link() {
   $form['block_list'] = array(
     '#type' => 'item',
     '#markup' => l(
-      t('Click me!'),
+      t('Start'),
       'tour-builder-ajax',
       array(
         'attributes' => array(
