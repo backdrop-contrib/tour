@@ -13,6 +13,11 @@
               }
               else {
                 targetCSS = targetElement.getPath();
+                // Somehow some selectors end up with a dot on the end, and
+                // that totally kills the Shepherd tour JS.
+                if (targetCSS.endsWith('.')) {
+                  targetCSS = targetCSS.slice(0, -1); 
+                }
               }
             if (validElement()) {
               targetElement.addClass( "elborder" );

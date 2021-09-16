@@ -27,8 +27,8 @@ function tour_builder_menu() {
 function tour_builder_library_info() {
   $libraries['jquery-getpath'] = array(
     'title' => 'JQuery GetPath',
-    'website' => 'https://github.com/yamadapc/jquery-getpath',
-    'version' => '0.0.0',
+    'website' => 'https://davecardwell.co.uk/javascript/jquery/plugins/jquery-getpath/',
+    'version' => '0.01',
     'js' => array(
       backdrop_get_path('module', 'tour_builder') . '/js/jquery-getpath.js' => array(),
     ),
