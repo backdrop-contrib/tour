@@ -348,8 +348,8 @@ function tour_ui_edit_tour($form, &$form_state, $tour = 'add') {
     $form_state['content'] = $tour['steps'];
   }
   if(!empty($tour) && !$form_state['is_new']) {
+    $form['content']['table']['tour'] = $tour;
     foreach ($form_state['content'] as $i => $step) {
-      
       $form['content']['table'][$i]['title'] = array(
         '#markup' => $step['title'],
       );
@@ -537,6 +537,21 @@ function _rebuild_step_options($optionals) {
   return implode("\n", $lines);
 }
 
+
+/**
+ * Implements hook_js_alter().
+ */
+function tour_ui_js_alter(&$js) {
+  $cdn = 'https://unpkg.com/@popperjs/core@2';
+  $js[$cdn] = backdrop_js_defaults();
+  $js[$cdn]['data'] = $cdn;
+  $js[$cdn]['type'] = 'external';
+  $js[$cdn]['every_page'] = TRUE;
+  $js[$cdn]['every_page_weight'] = -1;
+  $js[$cdn]['weight'] = -100;
+  $js[$cdn]['group'] = JS_LIBRARY;
+}
+
 /**
  * Returns HTML for the tour edit form.
  *
@@ -547,17 +562,22 @@ function _rebuild_step_options($optionals) {
  * @ingroup themeable
  */
 function theme_tour_ui_edit_tour_table($variables) {
+  backdrop_add_css(backdrop_get_path('module', 'tour') . '/shepherd/shepherd.css');
+  backdrop_add_js(backdrop_get_path('module', 'tour_ui') . '/tour_ui.js');
+  $tour = $variables['form']['tour'];
+  unset($variables['form']['tour']);
   $form = $variables['form'];
 
   $rows = array();
   $output = '';
   
   foreach (element_children($form) as $id) {
-
+    $step = $tour['steps'][$id];
     $form[$id]['weight']['#attributes']['class'] = array('tour-ui-weight');
+    unset($form[$id]['title']);
     $rows[] = array(
       'data' => array(
-        backdrop_render($form[$id]['title']),
+        theme('tour_step_row', array('step' => $step)),
         backdrop_render($form[$id]['operations']),
         backdrop_render($form[$id]['weight']),
       ),
@@ -813,6 +833,10 @@ function tour_ui_theme() {
     'tour_demo' => array(
       'variables' => array(),
       'template' => 'templates/tour-demo',
+    ),
+    'tour_step_row' => array(
+      'variables' => array('step' => NULL),
+      'template' => 'templates/tour-step-row',
     ),
   );
 }
