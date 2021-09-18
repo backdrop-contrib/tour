@@ -9,6 +9,8 @@ Backdrop.behaviors.tourPopper = {
   attach: function(context, settings) {
 
     if (typeof(Popper) === 'undefined') {
+      $('.tour-ui-table-tooltip').show();
+      $('.tour-ui-table-title').hide();
       return;
     }
 
