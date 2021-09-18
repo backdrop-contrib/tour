@@ -1,5 +1,5 @@
 <div class="tour-ui-table-row" id="tour-ui-table-row-<?php print $step['id']; ?>">
-  <div class="tour-ui-table-title"><?php print $step['title']; ?>
+  <div class="tour-ui-table-title"><a role="button" tabindex="0"><?php print $step['title']; ?><a>
   </div>
 
   <div aria-describedby="step-description" aria-labelledby="step-label" class="tour-ui-table-tooltip shepherd-enabled shepherd-element shepherd-has-cancel-icon shepherd-has-title backdrop-tour" data-shepherd-step-id="step-<?php print $step['id']; ?>" data-popper-placement="top">
