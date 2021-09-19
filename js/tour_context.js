@@ -4,6 +4,7 @@
       if(!Backdrop.settings.tourContext) return false;
       var tours = Backdrop.settings.tourContext.tours;
       var shepherdTours = [];
+      var gotopageURL = '';
       $.each( tours, function( key, settings ) {
 
         var tourItems = settings._tour_internal;
@@ -14,11 +15,20 @@
         shepherdTour.on('complete', function () {
           // ;
         });
+        var nextButtonAction = function (shepherdTour, tourStepConfig) {
+            console.log(tourStepConfig.jump);
+          if (tourStepConfig.jump) {
+            gotopageURL = tourStepConfig.jump;
+            return gotopage;
+          }
+
+          return tourStepConfig.cancelText ? shepherdTour.cancel : shepherdTour.next
+        };
         var nextButton = function (shepherdTour, tourStepConfig) {
           return {
             classes: 'button button--primary',
             text: tourStepConfig.cancelText ? tourStepConfig.cancelText : Backdrop.t('Next'),
-            action: tourStepConfig.cancelText ? shepherdTour.cancel : shepherdTour.next
+            action: nextButtonAction(shepherdTour, tourStepConfig)
           };
         };
         Backdrop.theme.tourItemContent = function (tourStepConfig) {
@@ -59,11 +69,13 @@
       $(document).on('click', 'a.tour-start-link', function(event) {
         event.preventDefault();
         var tourId = $(this).attr('data-id');
-        console.log(tourId);
         shepherdTours[tourId].start();
 
         return false;
       });
+      function gotopage() {
+        window.location.href = gotopageURL;
+      }
       
     }
   };

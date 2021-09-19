@@ -90,6 +90,7 @@ function tour_add_tours($active_tours) {
           'id' => $tip['id'],
           'selector' => $selector,
           'module' => 'tour',
+          'jump' => !empty($tip['jump']) ? $tip['jump'] : '',
           'type' => 'tour',
           'counter' => t('@tour_item of @total', [
             '@tour_item' => $index + 1,
