@@ -5,6 +5,8 @@
       var tours = Backdrop.settings.tourContext.tours;
       var shepherdTours = [];
       var gotopageURL = '';
+      var searchParams = new URLSearchParams(window.location.search);
+
       $.each( tours, function( key, settings ) {
 
         var tourItems = settings._tour_internal;
@@ -43,7 +45,10 @@
             attachTo: tourStepConfig.attachTo,
             buttons: [nextButton(shepherdTour, tourStepConfig)],
             classes: tourStepConfig.classes,
-            index: index
+            index: index,
+            tourID: key,
+            tourStepID: index,
+            tourStepJump: tourStepConfig.jump
           };
           tourItemOptions.when = {
             show: function show() {
@@ -66,6 +71,17 @@
         });
       }
       
+      if (searchParams.has('tour-jump')) {
+        var tourJump = searchParams.get('tour-jump');
+        var tourIndex = searchParams.get('tour-step');
+        if (shepherdTours[tourJump]) {
+          activeTour = shepherdTours[tourJump];
+          var nextIndex = parseInt(tourIndex) + 1;
+          console.log(nextIndex);
+          activeTour.show(nextIndex, true);
+        }
+      }
+      
       $(document).on('click', 'a.tour-start-link', function(event) {
         event.preventDefault();
         var tourId = $(this).attr('data-id');
@@ -74,7 +90,13 @@
         return false;
       });
       function gotopage() {
-        window.location.href = gotopageURL;
+            console.log(this.getCurrentStep());
+        var currentStep = this.getCurrentStep();
+        const params = $.param({
+            'tour-jump': currentStep.options.tourID,
+            'tour-step': currentStep.options.tourStepID
+        });
+        window.location.href = currentStep.options.tourStepJump+'?'+params;
       }
       
     }
