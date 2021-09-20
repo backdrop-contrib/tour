@@ -642,11 +642,18 @@ function tour_ui_edit_step($form, &$form_state, $tour, $step_name = 'add') {
     '#required' => TRUE,
     '#default_value' => isset($step['text']) ? $step['text'] : '',
   );
-  $form['target'] = array(
+  $form['selector'] = array(
     '#type' => 'textfield',
     '#required' => TRUE,
-    '#title' => t('Target'),
+    '#title' => t('Selector'),
     '#default_value' => isset($step['selector']) ? $step['selector'] : '',
+  );
+  $form['jump'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Destination'),
+    '#default_value' => isset($step['jump']) ? $step['jump'] : '',
+    '#autocomplete_path' => 'path-autocomplete',
+    '#placeholder' => t('(Optional) path for multi-page tours.'),
   );
 
   $form['actions'] = array('#type' => 'actions');
@@ -802,7 +809,8 @@ function tour_ui_get_default_step($max_weight = 0) {
   return array (
     'title' => t('Stop') . '#: ' . ($max_weight + 2),
     'content' => '',
-    'target' => '',
+    'selector' => '',
+    'jump' => '',
     'placement' => '',
     'enabled' => 1,
     'optional' => '',
