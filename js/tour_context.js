@@ -61,15 +61,6 @@
         });
         shepherdTours[key] = shepherdTour;
       });
-      if (Backdrop.settings.tourContext.autoStart) {
-        $.each( tours, function( key, settings ) {
-          if (settings.autoStart) {
-            shepherdTours[key].start();
-            // Only one auto start tour per page.
-            return false;
-          }
-        });
-      }
       
       if (searchParams.has('tour-jump')) {
         var tourJump = searchParams.get('tour-jump');
@@ -77,9 +68,17 @@
         if (shepherdTours[tourJump]) {
           activeTour = shepherdTours[tourJump];
           var nextIndex = parseInt(tourIndex) + 1;
-          console.log(nextIndex);
           activeTour.show(nextIndex, true);
         }
+      }
+      else if (Backdrop.settings.tourContext.autoStart) {
+        $.each( tours, function( key, settings ) {
+          if (settings.autoStart) {
+            shepherdTours[key].start();
+            // Only one auto start tour per page.
+            return false;
+          }
+        });
       }
       
       $(document).on('click', 'a.tour-start-link', function(event) {
