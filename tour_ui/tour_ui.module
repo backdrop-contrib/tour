@@ -189,7 +189,7 @@ function tour_ui_disable_tour_submit($form, &$form_state) {
   $config->set('enabled', $set_enabled_status);
   $config->save();
 
-	backdrop_set_message('Tour ' . $tour['title'] . ' settings saved.');
+  backdrop_set_message(t('Tour "@title" settings saved.', array('@title' => $tour['title'])));
   cache_flush('cache');
 	$form_state['redirect'] = 'admin/config/user-interface/tour';
 }
@@ -225,7 +225,7 @@ function tour_ui_delete_tour_submit($form, &$form_state) {
   $config = config('tour.tour.' . $tour['name']);
   $config->delete();
 
-	backdrop_set_message('Tour ' . $tour['title'] . ' has been deleted.');
+  backdrop_set_message(t('Tour "@title" has been deleted.', array('@title' => $tour['title'])));
   cache_flush('cache');
 	$form_state['redirect'] = 'admin/config/user-interface/tour';
 }
