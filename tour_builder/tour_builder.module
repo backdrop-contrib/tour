@@ -252,10 +252,15 @@ function tour_builder_save_finish($form, $form_state) {
   $config->set('description', $form_state['tour_description']);
   $config->set('editable', 1);
   $config->set('auto_start', 0);
-  $config->set('enabled', 1);
+  $config->set('enabled', 0);
   $config->set('steps', $form_state['stops']);
   $config->save();
   cache_flush('cache');
+  backdrop_set_message(t('Tour "@title" saved.', array('@title' => $form_state['tour_title'])));
+  if (empty($form_state['stops'])) {
+    backdrop_set_message(t('No tour steps have been created as yet.'), 'warning');
+  }
+    
 }
 
 /**

@@ -30,7 +30,6 @@ function tour_init() {
   if (isset($_GET['tour-jump']) && $tour_jump = tour_load($_GET['tour-jump'])) {
     $active_tours += array($tour_jump['name'] => $tour_jump);
   }
-  dpm($active_tours);
   tour_add_tours($active_tours);
 }
 
