@@ -129,8 +129,13 @@ function tour_ui_list_tour_tours() {
       '#type' => 'dropbutton',
       '#links' => $links,
     );
-    
+
+    $tour_links = array();
+    foreach ($item['paths'] as $path) {
+      $tour_links[] = l($path, $path);
+    }
     $row['title'] = $item['title'];
+    $row['paths'] = theme('item_list', array('items' => $tour_links));
     $row['description'] = $item['description'];
     $row['auto_start'] = $item['auto_start'] ? 'TRUE' : 'FALSE';
     $row['status'] = $state;
@@ -141,6 +146,7 @@ function tour_ui_list_tour_tours() {
   if (!empty($rows)) {
     $header = array(
       t('Title'),
+      t('Paths'),
       t('Description'),
       t('Autostart'),
       t('Status'),
