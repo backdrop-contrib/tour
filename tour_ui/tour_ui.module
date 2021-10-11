@@ -132,11 +132,11 @@ function tour_ui_list_tour_tours() {
 
     $tour_links = array();
     foreach ($item['paths'] as $path) {
-      $tour_links[] = l($path, $path);
+      $tour_links[] = l(check_plain($path), check_url($path));
     }
-    $row['title'] = $item['title'];
+    $row['title'] = check_plain($item['title']);
     $row['paths'] = theme('item_list', array('items' => $tour_links));
-    $row['description'] = $item['description'];
+    $row['description'] = check_plain($item['description']);
     $row['auto_start'] = $item['auto_start'] ? 'TRUE' : 'FALSE';
     $row['status'] = $state;
     $row['operations'] = backdrop_render($operations);
@@ -835,6 +835,7 @@ function tour_ui_format_lines($text) {
   $text = array_filter($text, 'strlen');
   return $text;
 }
+
 /**
  * Implements hook_theme().
  *
@@ -853,6 +854,16 @@ function tour_ui_theme() {
       'template' => 'templates/tour-step-row',
     ),
   );
+}
+
+/**
+ * Implements hook_theme().
+ *
+ */
+function tour_ui_preprocess_tour_step_row(&$variables) {
+  $step = $variables['step'];
+  $variables['step_title'] = filter_xss($step['title']);
+  $variables['step_text'] = filter_xss($step['text']);
 }
 
  /**
