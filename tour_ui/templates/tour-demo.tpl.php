@@ -54,7 +54,7 @@
         <img src="<?php print url(backdrop_get_path('module', 'tour_ui') . '/css/images/280x120.gif'); ?>" style="width: 430px; height: 200px;">
       </div>
       <div class="eight columns">
-        <h3 id="numero2">Customize Each Stop Along the Way</h3>
+        <h3 id="numero2">Customize Each Step Along the Way</h3>
 
         <p>Aenean eu leo quam. Pellentesque ornare sem lacinia quam venenatis vestibulum. Curabitur blandit tempus porttitor. Aenean eu leo quam. Pellentesque ornare sem lacinia
           quam venenatis vestibulum. Aenean lacinia bibendum nulla sed consectetur. Cras mattis consectetur purus sit amet fermentum. Cras mattis consectetur purus sit amet

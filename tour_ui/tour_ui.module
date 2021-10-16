@@ -816,7 +816,7 @@ function tour_ui_max_weight($content) {
 
 function tour_ui_get_default_step($max_weight = 0) {
   return array (
-    'title' => t('Stop') . '#: ' . ($max_weight + 2),
+    'title' => t('Step') . '#: ' . ($max_weight + 2),
     'content' => '',
     'selector' => '',
     'jump' => '',
