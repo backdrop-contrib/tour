@@ -466,6 +466,7 @@ function tour_ui_edit_tour_submit($form, &$form_state) {
   $index = $form_state['step_index'];
 
   $name = $form_state['values']['name'];
+  $content = $form_state['values']['content'];
   unset($form_state['values']['content']);
   
   $config = config('tour.tour.' . $name);
@@ -476,7 +477,7 @@ function tour_ui_edit_tour_submit($form, &$form_state) {
   if (!$form_state['is_new']) {
     // Add weights, sort by weight, then remove weights.
     foreach ($tour['steps'] as $index => $step) {
-      $tour['steps'][$index]['weight'] = $form_state['values']['content']['table'][$index]['weight'];
+      $tour['steps'][$index]['weight'] = $content['table'][$index]['weight'];
     }
     backdrop_sort($tour['steps'], array('weight'));
     foreach ($tour['steps'] as $index => $step) {
