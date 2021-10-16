@@ -466,7 +466,7 @@ function tour_ui_edit_tour_submit($form, &$form_state) {
   $index = $form_state['step_index'];
 
   $name = $form_state['values']['name'];
-  $data = $form_state['values'];
+  unset($form_state['values']['content']);
   
   $config = config('tour.tour.' . $name);
   foreach ($form_state['values'] as $key => $value) {
@@ -626,12 +626,12 @@ function theme_tour_ui_edit_tour_table($variables) {
 function tour_ui_edit_step($form, &$form_state, $tour, $step_name = 'add') {
   $step = array();
   if ($step_name != 'add') {
-    foreach ($tour['steps'] as $index => $tip) {
-      if (isset($tip['id']) && $tip['id'] == $step_name) {
-        $step = $tip;
+    foreach ($tour['steps'] as $index => $step) {
+      if (isset($step['id']) && $step['id'] == $step_name) {
+        $step = $step;
         $form['id'] = array(
           '#type' => 'value',
-          '#value' => $tip['id'],
+          '#value' => $step['id'],
         );
         $form_state['step_index'] = $index;
         break;
@@ -642,13 +642,13 @@ function tour_ui_edit_step($form, &$form_state, $tour, $step_name = 'add') {
   $form_state['step_name'] = $step_name;
   $form['title'] = array(
     '#type' => 'textfield',
-    '#title' => t('Tip title'),
+    '#title' => t('Step title'),
     '#required' => TRUE,
     '#default_value' => isset($step['title']) ? $step['title'] : '',
   );
-  $form['content'] = array(
+  $form['text'] = array(
     '#type' => 'textarea',
-    '#title' => t('Tip content'),
+    '#title' => t('Step text'),
     '#rows' => 2,
     '#required' => TRUE,
     '#default_value' => isset($step['text']) ? $step['text'] : '',
@@ -740,8 +740,8 @@ function tour_ui_edit_step_submit($form, &$form_state) {
  * Callback to delete a step.
  */
 function tour_ui_delete_step($tour, $step) {
-  foreach ($tour['steps'] as $index => $tip) {
-    if (isset($tip['id']) && $tip['id'] == $step) {
+  foreach ($tour['steps'] as $index => $step) {
+    if (isset($step['id']) && $step['id'] == $step) {
       $removed_step = $tour['steps'][$index];
       unset($tour['steps'][$index]);
       break;
@@ -819,7 +819,7 @@ function tour_ui_max_weight($content) {
 function tour_ui_get_default_step($max_weight = 0) {
   return array (
     'title' => t('Step') . '#: ' . ($max_weight + 2),
-    'content' => '',
+    'text' => '',
     'selector' => '',
     'jump' => '',
     'placement' => '',
