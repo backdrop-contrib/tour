@@ -702,9 +702,9 @@ function tour_ui_edit_step_submit($form, &$form_state) {
 /**
  * Callback to delete a step.
  */
-function tour_ui_delete_step($tour, $step) {
+function tour_ui_delete_step($tour, $step_to_remove) {
   foreach ($tour['steps'] as $index => $step) {
-    if (isset($step['id']) && $step['id'] == $step) {
+    if (isset($step['id']) && $step['id'] == $step_to_remove) {
       $removed_step = $tour['steps'][$index];
       unset($tour['steps'][$index]);
       break;
@@ -730,7 +730,6 @@ function tour_ui_delete_step($tour, $step) {
 
   backdrop_static_reset('tour_load_all');
   cache_flush('cache');
-  //$form_state['redirect'] = 'admin/config/user-interface/tour/ui/' . $tour['name'];
 }  
 
 /**
