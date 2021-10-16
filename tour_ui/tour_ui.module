@@ -445,8 +445,10 @@ function tour_ui_edit_tour_validate($form, &$form_state) {
   
   // Validate paths
   foreach($paths as $path) {
-    if(!menu_get_item($path) && $path != '<front>'){
-      form_set_error('paths', t('The path @path is invalid.', array('@path' => $path)));
+    if (!backdrop_valid_path($path)) {
+      if (!backdrop_lookup_path('source', $path)) {
+        form_set_error('paths', t('The path @path is invalid.', array('@path' => $path)));
+      }
     }
   }
   $form_state['values']['paths'] = $paths;
