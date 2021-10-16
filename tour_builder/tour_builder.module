@@ -4,6 +4,34 @@
 /**
 * Implements hook_menu().
 */
+function tour_builder_preprocess_page(&$variables) {
+    $link = l(
+      t('Start'),
+      'tour-builder-ajax',
+      array(
+        'attributes' => array(
+          'class' => array('use-ajax tour-edit-link'),
+        )
+      )
+    );
+    $variables['page'] =  $variables['page'] . '<span class="element-hidden" id="builder-link-hidden">' . $link . '</span>';
+}
+
+/**
+* Implements hook_menu().
+*/
+function tour_builder_init() {
+  if (!empty($_SESSION['tour_builder']['jump'])) {
+    backdrop_add_library('system', 'backdrop.dialog');
+    backdrop_add_library('tour_builder', 'tour-builder');
+    $js_settings['builderJump'] = $_SESSION['tour_builder']['jump'];
+    backdrop_add_js($js_settings, 'setting');
+  }
+}
+
+/**
+* Implements hook_menu().
+*/
 function tour_builder_menu() {
   $items['tour-builder-link'] = array(
     'title' => 'tour_builder form',
@@ -85,6 +113,14 @@ function tour_builder_output() {
 }
 
 function tour_builder_output_form($form, &$form_state) {
+  global $user;
+  if (!empty($_SESSION['tour_builder']['jump'])) {
+    $stored_form_state = state_get($user->uid . '.' . $_SESSION['tour_builder']['jump']);
+    if (!empty($stored_form_state)) {
+      $form_state = array_merge($form_state, $stored_form_state);
+    }
+    $_SESSION['tour_builder']['jump'] = '';
+  }
   backdrop_add_library('tour_builder', 'tour-builder');
   $js_settings['tourBuilding'] = TRUE;
 
@@ -130,7 +166,7 @@ function tour_builder_output_form($form, &$form_state) {
   }
   else {
     $stop_array = !empty($form_state['stops']) ? $form_state['stops'] : array();
-
+    $stop_list = array();
     foreach ($stop_array as $stop) {
       $stop_list[] = $stop['title'];
     }
@@ -172,6 +208,15 @@ function tour_builder_output_form($form, &$form_state) {
         'callback' => 'tour_builder_save_stop_ajax',
       ),
     );
+    $form['actions']['jump'] = array(
+      '#type' => 'submit',
+      '#value' => t('Go to'),
+      '#limit_validation_errors' => array(),
+      '#submit' => array(),
+      '#ajax' => array(
+        'callback' => 'tour_builder_jump_ajax',
+      ),
+    );
     $form['actions']['submit'] = array(
       '#type' => 'submit',
       '#value' => t('Finish'),
@@ -186,6 +231,91 @@ function tour_builder_output_form($form, &$form_state) {
   return $form;
 }
 
+/**
+ * AJAX handler that saves a stop.
+ */
+function tour_builder_jump_ajax($form, &$form_state) {
+  $form_state_data = array(
+    'tour_name' => $form_state['tour_name'],
+    'tour_storage' => $form_state['tour_storage'],
+    'tour_title' => $form_state['tour_title'],
+    'tour_description' => $form_state['tour_description'],
+    'tour_paths' => $form_state['tour_paths'],
+    'stops' => $form_state['stops'],
+  );
+
+
+  $dialog_options = array(
+    'dialogClass' => 'tour-jump-dialog',
+    'modal' => TRUE,
+    'draggable' => TRUE,
+    'resizeable' => FALSE,
+    'autoResize' => FALSE,
+    'width' => '650',
+    'height' => '300',
+  );
+  $rendered_form = backdrop_get_form('tour_builder_jump_form', $form_state_data);
+  $commands[] = ajax_command_open_dialog('#tour-jump-dialog', 'hello', backdrop_render($rendered_form), $dialog_options);
+  return array(
+    '#type' => 'ajax',
+    '#commands' => $commands,
+  );
+}
+
+
+function tour_builder_jump_form($form, &$form_state, $form_state_data) {
+  $form['jump'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Destination'),
+    '#default_value' => '',
+    '#autocomplete_path' => 'path-autocomplete',
+  );
+  $form['form_state_data'] = array(
+    '#type' => 'value',
+    '#value' => $form_state_data,
+  );
+  $form['actions'] = array(
+    '#type' => 'actions',
+  );
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Jump'),
+    '#submit' => array('tour_builder_jump'),
+    '#ajax' => array(
+      'callback' => 'tour_builder_jump_form_ajax',
+    ),
+  );
+
+  return $form;
+}
+
+/**
+ * AJAX handler that saves a stop.
+ */
+function tour_builder_jump_form_ajax($form, &$form_state) {
+  $_SESSION['tour_builder']['jump'] = $form_state['values']['form_state_data']['tour_name'];
+  $jump_path = url($form_state['values']['jump'], array('absolute' => TRUE));
+  $commands[] = ajax_command_redirect($jump_path);
+  return array(
+    '#type' => 'ajax',
+    '#commands' => $commands,
+  );
+}
+
+/**
+ * AJAX handler that saves a stop.
+ */
+function tour_builder_jump($form, &$form_state) {
+  global $user;
+  $data = $form_state['values']['form_state_data'];
+  if (!empty($data['stops'])) {
+    $last_stop_key = count($data['stops']) - 1;
+    $data['stops'][$last_stop_key]['jump'] = $form_state['values']['jump'];
+  }
+  $key = $user->uid . '.' . $data['tour_name'];
+  state_set($key, $data);
+  
+}
 
 /**
  * AJAX handler that saves a stop.
@@ -267,9 +397,11 @@ function tour_builder_save_finish($form, $form_state) {
  * AJAX handler that saves a stop.
  */
 function tour_builder_save_finish_ajax($form, $form_state) {
+  $url = url('admin/config/user-interface/tour', array('absolute' => TRUE));
+  $_SESSION['tour_builder']['jump'] = '';
   $commands = array();
   $commands[] = ajax_command_close_dialog('#tour-edit-dialog');
-  $commands[] = ajax_command_redirect('admin/config/user-interface/tour');
+  $commands[] = ajax_command_redirect($url);
 
   $return = array(
     '#type' => 'ajax',

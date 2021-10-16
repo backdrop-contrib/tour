@@ -5,6 +5,7 @@
       var targetCSS;
       $(document).on({
           mouseover: function (e) {
+        console.log('targetElement.parents()');
             if(!Backdrop.settings.tourBuilding) return false;
             e.stopImmediatePropagation();
             targetElement = $(e.target);
@@ -48,7 +49,7 @@
         if (
             !targetElement ||
             targetElement.parents('#admin-bar').length ||
-            targetElement.parents('.tour-edit-dialog').length
+            targetElement.parents('.ui-dialog').length
         ) {
           return false;
         }
@@ -74,8 +75,28 @@
 
       $('#tour-edit-dialog').on('dialogclose', function (e, dialog, $element) {
         Backdrop.settings.tourBuilding = false;
+        Backdrop.settings.builderJump = false;
+        console.log(this);
       });
 
+      // Open a dialog if editing a particular block.
+      var builderJump = Backdrop.settings.builderJump;
+      if (builderJump) {
+        window.setTimeout(function() {
+        var $click_link = $('#builder-link-hidden a').once('builder-link-hidden');
+          $click_link.triggerHandler('click');
+          // Clear out the hash. Use history if available, preventing another
+          // entry (which would require two back button clicks). Fallback to
+          // directly updating the URL in the location bar.
+          // if (window.history && window.history.replaceState) {
+            // window.history.replaceState({}, '', '#');
+          // }
+          // else {
+            // window.location.hash = '';
+          // }
+        }, 100);
+        builderJump = null;
+      }
 
     }
   };
