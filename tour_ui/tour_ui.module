@@ -513,44 +513,6 @@ function tour_name_exists($value) {
 }
 
 /**
- * Callback for both ajax-enabled buttons.
- *
- * Selects and returns the fieldset with the names in it.
- */
-function tour_ui_add_more_ajax($form, $form_state) {
-  return $form['content'];
-  $commands = array();
-  $commands[] = ajax_command_html('#steps-fieldset-wrapper', backdrop_render($form['content']));
-  return array(
-    '#type' => 'ajax',
-    '#commands' => $commands,
-  );
-}
-
-/**
- * Submit handler for the "add-one-more" button.
- *
- * Increments the max counter and causes a rebuild.
- */
-function tour_ui_add_one($form, &$form_state) {
-  $form_state['redirect'] = 'admin/config/user-interface/tour/ui/'. $form_state['tour']['name'] . '/step/add';
-}
-
-/**
- * Callback for both populating step options textareas.
- *
- * Rebuilds options in the format 'stepOption:value'.
- */
-function _rebuild_step_options($optionals) {
-  $lines = array();
-  foreach($optionals as $key => $option) {
-    $lines[] = $key . ':' . $option;
-  }
-  return implode("\n", $lines);
-}
-
-
-/**
  * Implements hook_js_alter().
  */
 function tour_ui_js_alter(&$js) {
@@ -730,6 +692,7 @@ function tour_ui_edit_step_submit($form, &$form_state) {
   // $config->setData($data);
   // $config->save();
   tour_ui_set_tempstore($data);
+  $form_state['tour'] = $data;
   backdrop_static_reset('tour_load_all');
   cache_flush('cache');
   $form_state['redirect'] = 'admin/config/user-interface/tour/ui/' . $data['name'];
@@ -798,6 +761,7 @@ function tour_ui_step_ajax_dialog_submit($form, $form_state) {
   }
   else {
     $tour_ui_edit_form = backdrop_get_form('tour_ui_edit_tour', $form_state['tour']);
+    dpm($tour_ui_edit_form);
     $step_table_html = backdrop_render($tour_ui_edit_form['content']);
     $commands[] = ajax_command_replace('#steps-fieldset-wrapper', $step_table_html);
   }
