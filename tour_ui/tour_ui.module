@@ -353,8 +353,12 @@ function tour_ui_edit_tour($form, &$form_state, $tour = 'add') {
   if(!$form_state['is_new']) {
     $form_state['content'] = $tour['steps'];
   }
+
   if(!empty($tour) && !$form_state['is_new']) {
-    $form['content']['table']['tour'] = $tour;
+    $form['content']['table']['tour'] = array(
+      '#type' => 'value',
+      '#value' => $tour,
+    );
     foreach ($form_state['content'] as $i => $step) {
       $form['content']['table'][$i]['title'] = array(
         '#markup' => $step['title'],
@@ -570,13 +574,12 @@ function tour_ui_js_alter(&$js) {
 function theme_tour_ui_edit_tour_table($variables) {
   backdrop_add_css(backdrop_get_path('module', 'tour') . '/shepherd/shepherd.css');
   backdrop_add_js(backdrop_get_path('module', 'tour_ui') . '/tour_ui.js');
-  $tour = $variables['form']['tour'];
+  $tour = $variables['form']['tour']['#value'];
   unset($variables['form']['tour']);
   $form = $variables['form'];
 
   $rows = array();
   $output = '';
-  
   foreach (element_children($form) as $id) {
     $step = $tour['steps'][$id];
     $form[$id]['weight']['#attributes']['class'] = array('tour-ui-weight');
