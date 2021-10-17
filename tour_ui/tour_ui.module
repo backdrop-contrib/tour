@@ -75,7 +75,7 @@ function tour_ui_menu() {
     'title' => 'tour Demo (Start tour automatically)',
     'page callback' => 'theme',
     'page arguments' => array('tour_demo'),
-    'access arguments' => array('access administration pages'),
+    'access callback' => array('access content'),
     'type' => MENU_LOCAL_TASK,
   );
 
@@ -89,7 +89,7 @@ function tour_ui_menu() {
     'title' => 'tour Demo (Use manual trigger to start tour)',
     'page callback' => 'theme',
     'page arguments' => array('tour_demo'),
-    'access arguments' => array('access administration pages'),
+    'access arguments' => array('access content'),
     'type' => MENU_LOCAL_TASK,
   );
 
