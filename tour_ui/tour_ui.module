@@ -586,7 +586,6 @@ function tour_ui_edit_step($form, &$form_state, $tour, $step_name = 'add') {
     );
   }
   $form_state['tour'] = $tour;
-  dpm($tour);
   $step = $tour['steps'][$step_name];
   $form_state['step_name'] = $step_name;
   $form['title'] = array(

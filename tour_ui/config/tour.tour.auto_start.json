@@ -10,36 +10,41 @@
     "description": "This Demo Tour is triggered automatically.",
     "auto_start": 1,
     "enabled": 1,
-    "steps": [
-        {
-            "title": "Step #1",
-            "text": "You can control all the details for your tour step. Any valid HTML will work inside of tour.",
+    "steps": {
+        "numero1": {
+            "id": "numero1",
+            "title": "Stop #1",
+            "text": "You can control all the details for you tour stop. Any valid HTML will work inside of tour.",
             "selector": "#numero1",
-            "id": "numero1"
+            "weight": "-10"
         },
-        {
-            "title": "Step #2",
+        "numero2": {
+            "title": "Stop #2",
             "text": "Get the details right.!",
             "selector": "#numero2",
-            "id": "numero2"
+            "id": "numero2",
+            "weight": "-9"
         },
-        {
-            "title": "Step #3",
+        "numero3": {
+            "title": "Stop #3",
             "text": "It works right aligned.",
             "selector": "#numero3",
-            "id": "numero3"
+            "id": "numero3",
+            "weight": "-8"
         },
-        {
-            "title": "Step #4",
+        "numero4": {
+            "title": "Stop #4",
             "text": "And left!",
             "selector": "#numero4",
-            "id": "numero4"
+            "id": "numero4",
+            "weight": "-7"
         },
-        {
-            "title": "Step #5",
+        "numero5": {
+            "title": "Stop #5",
             "text": "Now what are you waiting for? Add this to your projects and get the most out of your apps!",
-            "selector": "#numero5",
-            "id": "numero5"
+            "selector": "#page-title",
+            "id": "numero5",
+            "weight": "-6"
         }
-    ]
+    }
 }

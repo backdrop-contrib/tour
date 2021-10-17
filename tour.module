@@ -74,7 +74,9 @@ function tour_add_tours($active_tours) {
     foreach ($tour['steps'] as $tip) {
       $total_steps = count($tour['steps']);
     }
-    foreach ($tour['steps'] as $index => $tip) {
+    $index = 0;
+    foreach ($tour['steps'] as $key => $tip) {
+      
       $classes = [
         'tip-' . $tip['id'],
       ];
@@ -107,6 +109,7 @@ function tour_add_tours($active_tours) {
           'classes' => implode(' ', $classes),
         ] + $output;
       }
+      $index++;
     }
 
     // If there is at least one tour item, build the tour.
