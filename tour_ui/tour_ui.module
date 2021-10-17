@@ -480,9 +480,9 @@ function tour_ui_edit_tour_submit($form, &$form_state) {
       $tour['steps'][$index]['weight'] = $content['table'][$index]['weight'];
     }
     backdrop_sort($tour['steps'], array('weight'));
-    foreach ($tour['steps'] as $index => $step) {
-      unset($tour['steps'][$index]['weight']);
-    }
+    // foreach ($tour['steps'] as $index => $step) {
+      // unset($tour['steps'][$index]['weight']);
+    // }
 
     $config->set('steps', $tour['steps']);
   }
@@ -588,18 +588,16 @@ function theme_tour_ui_edit_tour_table($variables) {
  */
 function tour_ui_edit_step($form, &$form_state, $tour, $step_name = 'add') {
   $step = array();
-  if ($step_name != 'add') {
-    foreach ($tour['steps'] as $index => $step) {
-      if (isset($step['id']) && $step['id'] == $step_name) {
-        $step = $step;
-        $form['id'] = array(
-          '#type' => 'value',
-          '#value' => $step['id'],
-        );
-        $form_state['step_index'] = $index;
-        break;
-      }
+
+  if ($step_name == 'add') {
+    $weights = array();
+    foreach ($tour['steps'] as $tour_step) {
+      $weights[] = $tour_step['weight'];
     }
+    $form['weight'] = array(
+      '#type' => 'value',
+      '#value' => max($weights) + 1,
+    );
   }
   $form_state['tour'] = $tour;
   $form_state['step_name'] = $step_name;
@@ -676,27 +674,16 @@ function tour_ui_edit_step_validate($form, &$form_state) {
  * @see tour_ui_edit_tour_validate().
  */
 function tour_ui_edit_step_submit($form, &$form_state) {  
-  $data = $form_state['tour'];
+  $tour = $form_state['tour'];
   $step = $form_state['values'];
 
-  // $data = tour_ui_tempstore_load($tour['name']);
-  //$data = $config->get();
+  $tour['steps'][$step['id']] = $step;
 
-  if (isset($form_state['step_index'])) {
-    $index = (int) $form_state['step_index'];
-    $data['steps'][$index] = $step;
-  }
-  else {
-    $data['steps'][] = $step;
-  }
-
-  // $config->setData($data);
-  // $config->save();
-  tour_ui_set_tempstore($data);
-  $form_state['tour'] = $data;
+  tour_ui_set_tempstore($tour);
+  $form_state['tour'] = $tour;
   backdrop_static_reset('tour_load_all');
   cache_flush('cache');
-  $form_state['redirect'] = 'admin/config/user-interface/tour/ui/' . $data['name'];
+  $form_state['redirect'] = 'admin/config/user-interface/tour/ui/' . $tour['name'];
 }
 
 
@@ -761,7 +748,6 @@ function tour_ui_step_ajax_dialog_submit($form, $form_state) {
   }
   else {
     $tour_ui_edit_form = backdrop_get_form('tour_ui_edit_tour', $form_state['tour']);
-    dpm($tour_ui_edit_form);
     $step_table_html = backdrop_render($tour_ui_edit_form['content']);
     $commands[] = ajax_command_replace('#steps-fieldset-wrapper', $step_table_html);
   }
