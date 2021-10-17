@@ -75,13 +75,12 @@ function tour_ui_menu() {
     'title' => 'tour Demo (Start tour automatically)',
     'page callback' => 'theme',
     'page arguments' => array('tour_demo'),
-    'access callback' => array('access content'),
+    'access arguments' => array('access content'),
     'type' => MENU_LOCAL_TASK,
   );
 
   $items['admin/config/user-interface/tour/demo/auto-start'] = array(
     'title' => 'tour Demo (Start tour automatically)',
-    'access arguments' => array('access administration pages'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
 
