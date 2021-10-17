@@ -514,20 +514,6 @@ function tour_name_exists($value) {
 }
 
 /**
- * Implements hook_js_alter().
- */
-function tour_ui_js_alter(&$js) {
-  $cdn = 'https://unpkg.com/@popperjs/core@2';
-  $js[$cdn] = backdrop_js_defaults();
-  $js[$cdn]['data'] = $cdn;
-  $js[$cdn]['type'] = 'external';
-  $js[$cdn]['every_page'] = TRUE;
-  $js[$cdn]['every_page_weight'] = -1;
-  $js[$cdn]['weight'] = -100;
-  $js[$cdn]['group'] = JS_LIBRARY;
-}
-
-/**
  * Returns HTML for the tour edit form.
  *
  * @param $variables
@@ -758,27 +744,6 @@ function tour_ui_step_ajax_dialog_submit($form, $form_state) {
   );
 }
 
-function tour_ui_max_weight($content) {
-  $weights = array();
-  foreach($content as $step) {
-    $weights[] = $step['weight'];
-  }
-  return max($weights);
-}
-
-function tour_ui_get_default_step($max_weight = 0) {
-  return array (
-    'title' => t('Step') . '#: ' . ($max_weight + 2),
-    'text' => '',
-    'selector' => '',
-    'jump' => '',
-    'placement' => '',
-    'enabled' => 1,
-    'optional' => '',
-    'weight' => $max_weight + 1,
-  );
-}
-
 /**
  * Cleans up input from multiline textareas.
  *
@@ -882,4 +847,18 @@ function tour_ui_set_tempstore($item) {
  */
 function tour_ui_clear_tempstore($name) {
   tempstore_clear('tour', $name);
+}
+
+/**
+ * Implements hook_js_alter().
+ */
+function tour_ui_js_alter(&$js) {
+  $cdn = 'https://unpkg.com/@popperjs/core@2';
+  $js[$cdn] = backdrop_js_defaults();
+  $js[$cdn]['data'] = $cdn;
+  $js[$cdn]['type'] = 'external';
+  $js[$cdn]['every_page'] = TRUE;
+  $js[$cdn]['every_page_weight'] = -1;
+  $js[$cdn]['weight'] = -100;
+  $js[$cdn]['group'] = JS_LIBRARY;
 }
