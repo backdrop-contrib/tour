@@ -1,5 +1,5 @@
 name = Tour builder
-description = Build site tours.
+description = Point and click interface for building site tours.
 backdrop = 1.x
 type = module
 

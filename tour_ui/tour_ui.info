@@ -1,4 +1,4 @@
-name = tour builder UI
+name = Tour UI
 description = Provides a user interface for creating site tours.
 package = User Interface
 backdrop = 1.x
