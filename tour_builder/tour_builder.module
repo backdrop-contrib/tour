@@ -352,7 +352,9 @@ function tour_builder_save_step($form, &$form_state) {
   module_load_include('inc', 'system', 'system.admin');
   $machine_name = system_transliterate_machine_name(strtolower($form_state['values']['title']), array());
   $id = tour_step_unique_id($form_state['steps'], $machine_name);
+  $weight = count($form_state['steps']) + 1;
   $form_state['values']['id'] = $id;
+  $form_state['values']['weight'] = $weight;
   $form_state['steps'][] = $form_state['values'];
   $form_state['rebuild'] = TRUE;
 }
