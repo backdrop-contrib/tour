@@ -3,3 +3,5 @@ description = Provides integration with a jQuery plugin for creating site tours 
 package = User Interface
 backdrop = 1.x
 type = module
+
+stylesheets[all][] = css/tour.css
