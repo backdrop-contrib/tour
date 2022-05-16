@@ -44,13 +44,33 @@ function tour_get_path_tours() {
     if($tour['enabled']) {
       foreach($tour['paths'] as $path) {
         if ($path == current_path() || $path == request_path() || ($path == '<front>' && request_path() == '')) {
-          $active_tours[$name] = $tour;
+          if (tour_check_tour_access($tour)) {
+            $active_tours[$name] = $tour;
+          }
         }
       }
     }
   }
 
   return $active_tours;
+}
+
+/**
+ *  Checks user has access to all tour jump paths.
+ *
+ * @return
+ *   FALSE if user is denied access to any of the jump paths; TRUE otherwise.
+ */
+function tour_check_tour_access($tour) {
+  foreach ($tour['steps'] as $step) {
+    if (!empty($step['jump'])) {
+      $path = ltrim($step['jump'],'/');
+      if (!backdrop_valid_path($path)) {
+        return FALSE;
+      }
+    }
+  }
+  return TRUE;
 }
 
 
@@ -181,6 +201,7 @@ function tour_add_tours($active_tours) {
 
   backdrop_add_js($js_settings, 'setting');
   backdrop_add_library('tour', 'shepherd');
+  backdrop_add_css(backdrop_get_path('module', 'tour') . '/css/tour.css');
   backdrop_add_js(backdrop_get_path('module', 'tour') . '/js/tour_context.js', array('scope' => 'footer', 'weight' => 5));
 }
 
