@@ -473,15 +473,6 @@ function tour_ui_edit_tour_submit($form, &$form_state) {
   }
   // This is not a new tour being added so save steps from tempstore.
   if (!$form_state['is_new']) {
-    // Add weights, sort by weight, then remove weights.
-    foreach ($tour['steps'] as $index => $step) {
-      $tour['steps'][$index]['weight'] = $content['table'][$index]['weight'];
-    }
-    backdrop_sort($tour['steps'], array('weight'));
-    // foreach ($tour['steps'] as $index => $step) {
-      // unset($tour['steps'][$index]['weight']);
-    // }
-
     $config->set('steps', $tour['steps']);
   }
 
