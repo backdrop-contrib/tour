@@ -92,7 +92,7 @@ function tour_add_tours($active_tours) {
       }
 
       $output = [
-        'text' => filter_xss($tip_text),
+        'text' => filter_xss($tip_text, array('a', 'em', 'strong', 'cite', 'blockquote', 'code', 'ul', 'ol', 'li', 'dl', 'dt', 'dd', 'div', 'p')),
         'title' => filter_xss($tip['title']),
       ];
 
