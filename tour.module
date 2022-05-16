@@ -84,8 +84,15 @@ function tour_add_tours($active_tours) {
       $selector = $tip['selector'];
       $location = 'top'; // $tip['selector'];
 
+      if (isset($tip['text']['format'])) {
+        $tip_text = $tip['text']['value'];
+      }
+      else {
+        $tip_text =  $tip['text'];
+      }
+
       $output = [
-        'text' => filter_xss($tip['text']),
+        'text' => filter_xss($tip_text),
         'title' => filter_xss($tip['title']),
       ];
 
