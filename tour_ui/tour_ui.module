@@ -586,6 +586,14 @@ function tour_ui_edit_step($form, &$form_state, $tour, $id = 'add') {
   $form_state['tour'] = $tour;
   $step = isset($tour['steps'][$id]) ? $tour['steps'][$id] : $step;
   $form_state['id'] = $id;
+  if (isset($step['text']['format'])) {
+    $step_text = $step['text']['value'];
+    $format = $step['text']['format'];
+  }
+  else {
+    $step_text =  isset($step['text']) ? $step['text'] : '';
+    $format = 'filtered_html';
+  }
   $form['title'] = array(
     '#type' => 'textfield',
     '#title' => t('Step title'),
@@ -593,11 +601,12 @@ function tour_ui_edit_step($form, &$form_state, $tour, $id = 'add') {
     '#default_value' => isset($step['title']) ? $step['title'] : '',
   );
   $form['text'] = array(
-    '#type' => 'textarea',
+    '#type' => 'text_format',
     '#title' => t('Step text'),
     '#rows' => 2,
+    '#format' => $format,
     '#required' => TRUE,
-    '#default_value' => isset($step['text']) ? $step['text'] : '',
+    '#default_value' => $step_text,
   );
   $form['selector'] = array(
     '#type' => 'textfield',
@@ -784,8 +793,14 @@ function tour_ui_theme() {
  */
 function tour_ui_preprocess_tour_step_row(&$variables) {
   $step = $variables['step'];
+  if (isset($step['text']['format'])) {
+    $step_text = $step['text']['value'];
+  }
+  else {
+    $step_text =  isset($step['text']) ? $step['text'] : '';
+  }
   $variables['step_title'] = filter_xss($step['title']);
-  $variables['step_text'] = filter_xss($step['text']);
+  $variables['step_text'] = filter_xss($step_text);
 }
 
  /**
