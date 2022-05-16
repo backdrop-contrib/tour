@@ -656,7 +656,7 @@ function tour_ui_edit_step_validate($form, &$form_state) {
 
   if ($form_state['id'] == 'add') {
     module_load_include('inc', 'system', 'system.admin');
-    $id = system_transliterate_machine_name($form_state['values']['title'], array());
+    $id = system_transliterate_machine_name(strtolower($form_state['values']['title']), array());
 
     $form_state['values']['id'] = tour_step_unique_id($form_state['tour']['steps'], $id);
   }
