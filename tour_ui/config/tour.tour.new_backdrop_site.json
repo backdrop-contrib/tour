@@ -35,7 +35,7 @@
         "Admin_Menu_Search": {
             "weight": "-6",
             "title": "Admin Menu Search",
-            "text": "<strong>This menu search</strong> will help you find features and configuration pages quickly.",
+            "text": "<p><strong>This menu search</strong> will help you find features and configuration pages quickly.</p>",
             "selector": ".admin-bar-search",
             "jump": "/admin/dashboard",
             "id": "admin_menu_search"
@@ -59,7 +59,7 @@
         "Content_Menu": {
             "weight": "-3",
             "title": "Content Menu",
-            "text": "<strong>This is where you will manage the content on your site.</strong>",
+            "text": "<p><strong>This is where you will manage the content on your site.</strong></p>",
             "selector": ".admin-content",
             "jump": "",
             "id": "content_menu"
@@ -67,7 +67,7 @@
         "Content_List": {
             "weight": "-2",
             "title": "Content List",
-            "text": "The content page has <strong>a list of all the content on your site.</strong>",
+            "text": "<p>The content page has <strong>a list of all the content on your site.</strong></p>",
             "selector": "#views-form-node-admin-content-page",
             "jump": "",
             "id": "content_list"
@@ -75,7 +75,7 @@
         "Content_Filters": {
             "weight": "-1",
             "title": "Content Filters",
-            "text": "<strong>Search your content by title or filter by content type.</strong>",
+            "text": "<p><strong>Search your content by title or filter by content type.</strong></p>",
             "selector": ".views-exposed-form",
             "jump": "/admin/people",
             "id": "content_filters"
@@ -83,7 +83,7 @@
         "User_Accounts": {
             "weight": "0",
             "title": "User Accounts",
-            "text": "This is where you will add, delete, and <strong>manage your user accounts.</strong> ",
+            "text": "<p>This is where you will add, delete, and <strong>manage your user accounts.</strong></p> ",
             "selector": ".admin-people",
             "jump": "",
             "id": "user_accounts"
@@ -91,7 +91,7 @@
         "Manage_Users": {
             "weight": "2",
             "title": "Manage Users",
-            "text": "Here you can <strong>search for users</strong> by name or filter by status or role.",
+            "text": "<p>Here you can <strong>search for users</strong> by name or filter by status or role.</p>",
             "selector": "#views-exposed-form-user-admin-page",
             "jump": "/admin/appearance",
             "id": "manage_users"
@@ -99,7 +99,7 @@
         "Appearance": {
             "weight": "3",
             "title": "Appearance",
-            "text": "This is the page where you can <strong>administer and add new themes</strong> to your site to change the overall look and feel.",
+            "text": "<p>This is the page where you can <strong>administer and add new themes</strong> to your site to change the overall look and feel.</p>",
             "selector": ".admin-appearance",
             "jump": "/admin/appearance/install",
             "id": "appearance"
@@ -107,7 +107,7 @@
         "Install_Themes": {
             "weight": "4",
             "title": "Find new themes",
-            "text": "You can <strong>browse and install new themes</strong> available on BackdropCMS.org.",
+            "text": "<p>You can <strong>browse and install new themes</strong> available on BackdropCMS.org.</p>",
             "selector": ".tabs.primary li:nth-of-type(2)",
             "jump": "/admin/modules",
             "id": "install_themes"
@@ -115,7 +115,7 @@
         "Functionality": {
             "weight": "5",
             "title": "Functionality",
-            "text": "This is where you can <strong>download and adminster modules</strong> that add functionality to your site.",
+            "text": "<p>This is where you can <strong>download and adminster modules</strong> that add functionality to your site.</p>",
             "selector": ".admin-modules",
             "jump": "",
             "id": "functionality"
@@ -123,7 +123,7 @@
         "Find_New_Modules": {
             "weight": "9",
             "title": "Find New Modules",
-            "text": "Click here to <strong>search for and find new modules</strong> that add functionality to your site.",
+            "text": "<p>Click here to <strong>search for and find new modules</strong> that add functionality to your site.</p>",
             "selector": ".tabs.primary li:nth-of-type(2)",
             "jump": "/admin/modules/install",
             "id": "find_new_modules"
@@ -131,7 +131,7 @@
         "Add_A_Module": {
             "weight": "13",
             "title": "Add A Module",
-            "text": "<strong>Select a new module for installation.</strong>",
+            "text": "<p><strong>Select a new module for installation.</strong></p>",
             "selector": "table tr:nth-of-type(2)",
             "jump": "/admin/structure",
             "id": "add_a_module"
@@ -139,7 +139,7 @@
         "Structure": {
             "weight": "16",
             "title": "Structure",
-            "text": "<strong>Use the structure menu to create new content types</strong>, configure your site layout, edit your menus and add taxonomy terms.",
+            "text": "<p><strong>Use the structure menu to create new content types</strong>, configure your site layout, edit your menus and add taxonomy terms.</p>",
             "selector": ".admin-structure",
             "jump": "/admin/structure/layouts",
             "id": "structure"
@@ -187,7 +187,7 @@
         "Select_Layout_Template": {
             "weight": "20",
             "title": "Select A Layout Template",
-            "text": "For each layout on your site, you can <strong>choose from a number of existing layout templates</strong> and configure your layout visibility rules.",
+            "text": "<p>For each layout on your site, you can <strong>choose from a number of existing layout templates</strong> and configure your layout visibility rules.</p>",
             "selector": ".tabs li:nth-of-type(2)",
             "jump": "/admin/structure/layouts/settings",
             "id": "select_layout_template"
@@ -195,7 +195,7 @@
         "Layout_Templates": {
             "weight": "21",
             "title": "Layout Templates",
-            "text": "Go to Layouts > Templates to <strong>manage which templates are available</strong>.",
+            "text": "<p>Go to Layouts > Templates to <strong>manage which templates are available</strong>.</p>",
             "selector": ".tabs li:nth-of-type(3)",
             "jump": "",
             "id": "layout_templates"
@@ -203,7 +203,7 @@
         "Flexible_Templates_Page": {
             "weight": "22",
             "title": "Flexible Layout Templates",
-            "text": "<strong>Build your own layout template</strong> with precisely the regions and configuration that you require.",
+            "text": "<p><strong>Build your own layout template</strong> with precisely the regions and configuration that you require.</p>",
             "selector": ".action-links",
             "jump": "/",
             "id": "flexible_templates_page"
